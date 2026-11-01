@@ -21,19 +21,19 @@ ALLOWED_HOSTS = os.environ.get(
     "ALLOWED_HOSTS",
     "localhost,127.0.0.1,testserver",
 ).split(",")
-# ПРОБЛЕМА: динамический домен Railway нельзя предугадать.
-# РЕШЕНИЕ: разрешаем выданный домен, а не любой host.
-railway_domain = os.environ.get("RAILWAY_PUBLIC_DOMAIN", "").strip()
-if railway_domain:
-    ALLOWED_HOSTS.append(railway_domain)
+# ПРОБЛЕМА: Render назначает HTTPS-домен после создания сервиса.
+# РЕШЕНИЕ: разрешаем только домен данного сервиса, не используем ALLOWED_HOSTS="*".
+public_domain = os.environ.get("RENDER_EXTERNAL_HOSTNAME", "").strip()
+if public_domain and public_domain not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append(public_domain)
 
 # Фронтенд на Vite (порт 5173) проксирует /api, Origin браузера остаётся его
 CSRF_TRUSTED_ORIGINS = os.environ.get(
     "CSRF_TRUSTED_ORIGINS",
     "http://localhost:5173,http://127.0.0.1:5173",
 ).split(",")
-if railway_domain:
-    CSRF_TRUSTED_ORIGINS.append("https://" + railway_domain)
+if public_domain:
+    CSRF_TRUSTED_ORIGINS.append("https://" + public_domain)
 
 INSTALLED_APPS = [
     "django.contrib.auth",
@@ -68,7 +68,7 @@ DATABASES = {
     },
 }
 
-# ПРОБЛЕМА: Railway выдаёт PostgreSQL-подключение через DATABASE_URL.
+# ПРОБЛЕМА: Render выдаёт PostgreSQL-подключение через DATABASE_URL.
 # РЕШЕНИЕ: поддерживаем URL без поломки локальной POSTGRES_HOST-конфигурации.
 if os.environ.get("DATABASE_URL"):
     DATABASES = {"default": dj_database_url.config(conn_max_age=600, conn_health_checks=True)}
@@ -139,6 +139,7 @@ STATIC_URL = "/static/"
 FRONTEND_DIST_DIR = BASE_DIR / "frontend" / "dist"
 if FRONTEND_DIST_DIR.is_dir():
     WHITENOISE_ROOT = FRONTEND_DIST_DIR
+    WHITENOISE_AUTOREFRESH = DEBUG
 STATIC_ROOT = BASE_DIR / "staticfiles"
 # Редирект включается только при наличии правильно настроенного HTTPS proxy.
 SECURE_SSL_REDIRECT = not DEBUG and os.environ.get("SECURE_SSL_REDIRECT") == "1"
