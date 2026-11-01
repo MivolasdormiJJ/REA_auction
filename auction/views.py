@@ -62,7 +62,7 @@ def signin(request):
     eligible(user)
     login(request, user)
     return Response(
-        {"id": user.pk, "username": user.username, "csrfToken": get_token(request)}
+        {"id": user.pk, "username": user.username, "can_moderate": user.has_perm("auction.moderate_auction"), "csrfToken": get_token(request)}
     )
 
 
