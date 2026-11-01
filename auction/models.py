@@ -79,3 +79,15 @@ class Event(models.Model):
     action = models.CharField(max_length=40)
     reason = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
+
+
+class AuctionRequest(models.Model):
+    # ПРОБЛЕМА: повтор POST после потери ответа создавал второй заказ.
+    # РЕШЕНИЕ: уникальный ключ заказчика хранит результат первой операции.
+    owner = models.ForeignKey(User, on_delete=models.PROTECT)
+    idempotency_key = models.CharField(max_length=80)
+    payload_hash = models.CharField(max_length=64)
+    auction = models.ForeignKey(Auction, on_delete=models.PROTECT)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=["owner", "idempotency_key"], name="unique_auction_create_key")]
