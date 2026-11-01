@@ -48,7 +48,7 @@ export function LoginPage() {
         <div className="rea-login-card">
           <div className="rea-page-kicker">ДОБРО ПОЖАЛОВАТЬ</div>
           <h2>Вход в аккаунт</h2>
-          <p>Введите данные своей подтверждённой учётной записи, чтобы перейти к настоящим аукционам.</p>
+          <p>Введите данные своей учётной записи, чтобы перейти к настоящим аукционам.</p>
           {error && <Alert type="error" showIcon message={error} style={{ marginBottom: 23 }} />}
           <Form layout="vertical" size="large" onFinish={onFinish} requiredMark={false}>
             <Form.Item name="username" label="Имя пользователя" rules={[{ required: true, message: 'Введите имя пользователя' }]}>
