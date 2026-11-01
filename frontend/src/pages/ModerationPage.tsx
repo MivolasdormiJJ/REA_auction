@@ -12,18 +12,22 @@ function kopecksToRubles(k: number) {
 export function ModerationPage() {
   const [auctions, setAuctions] = useState<Auction[]>([]);
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
 
   const load = () => {
     setLoading(true);
-    getAuctions({ status: 'review' })
-      .then((res) => setAuctions(res.results))
+    // ПРОБЛЕМА: API возвращает лишь 20 записей, остальные заявки модераторы не видели.
+    // РЕШЕНИЕ: передаём номер страницы и используем общее число записей.
+    getAuctions({ status: 'review', page })
+      .then((res) => { setAuctions(res.results); setTotal(res.count); })
       .catch(() => {})
       .finally(() => setLoading(false));
   };
 
   useEffect(() => {
     load();
-  }, []);
+  }, [page]);
 
   const columns: ColumnsType<Auction> = [
     {
@@ -83,7 +87,7 @@ export function ModerationPage() {
           dataSource={auctions}
           columns={columns}
           rowKey="id"
-          pagination={false}
+          pagination={{ current: page, pageSize: 20, total, onChange: setPage }}
         />
       )}
     </div>
