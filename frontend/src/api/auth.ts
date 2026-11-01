@@ -26,3 +26,13 @@ export async function getMe(): Promise<User> {
   const { data } = await client.get<User>('/auth/me/');
   return data;
 }
+
+export async function register(username: string, email: string, password: string): Promise<void> {
+  await fetchCsrf();
+  await client.post('/auth/register/', { username, email, password });
+}
+
+export async function verifyEmail(uid: string, token: string): Promise<void> {
+  await fetchCsrf();
+  await client.post('/auth/verify-email/', { uid, token });
+}
