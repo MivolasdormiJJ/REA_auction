@@ -74,6 +74,7 @@ class DecisionInput(serializers.Serializer):
 
 class RegistrationInput(serializers.Serializer):
     username = serializers.CharField(min_length=3, max_length=150, trim_whitespace=True)
+    email = serializers.EmailField(max_length=254)
     password = serializers.CharField(write_only=True, trim_whitespace=False, max_length=128)
 
     def validate_username(self, value):
@@ -87,11 +88,17 @@ class RegistrationInput(serializers.Serializer):
             raise serializers.ValidationError("Это имя уже занято")
         return value
 
+    def validate_email(self, value):
+        email = value.lower()
+        if User.objects.filter(email__iexact=email).exists():
+            raise serializers.ValidationError("Этот email уже используется")
+        return email
+
     def validate(self, attrs):
         password = attrs["password"]
         if len(password) < 12:
             raise serializers.ValidationError({"password": "Используйте минимум 12 символов"})
-        user = User(username=attrs["username"])
+        user = User(username=attrs["username"], email=attrs["email"])
         try:
             validate_password(password, user=user)
         except DjangoValidationError as error:
