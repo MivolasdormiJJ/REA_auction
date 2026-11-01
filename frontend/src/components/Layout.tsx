@@ -27,6 +27,9 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   const menuItems = [
     { key: 'catalog', label: <Link to="/auctions">Каталог</Link> },
     { key: 'cabinet', label: <Link to="/cabinet">Мой кабинет</Link> },
+    // ПРОБЛЕМА: пользователи не сразу понимают правила закрытых ставок и второй цены.
+    // РЕШЕНИЕ: делаем обучающий макет доступным из основного меню.
+    { key: 'guide', label: <Link to="/design-preview">Как работают торги</Link> },
     ...(user?.can_moderate
       ? [{ key: 'moderation', label: <Link to="/moderation">Модерация</Link> }]
       : []),
