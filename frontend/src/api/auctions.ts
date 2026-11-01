@@ -10,9 +10,16 @@ import type {
 } from './types';
 
 export async function getCategories(): Promise<Category[]> {
-  // DRF pagination is global, so categories also come as { count, results }
-  const { data } = await client.get<PaginatedResponse<Category>>('/categories/');
-  return data.results;
+  // ПРОБЛЕМА: API отдаёт категории страницами по 20, остальные не попадали в форму.
+  // РЕШЕНИЕ: запрашиваем все страницы, не пропуская доступные категории.
+  const categories: Category[] = [];
+  let page = 1;
+  while (true) {
+    const { data } = await client.get<PaginatedResponse<Category>>('/categories/', { params: { page } });
+    categories.push(...data.results);
+    if (!data.next) return categories;
+    page += 1;
+  }
 }
 
 export async function getAuctions(
