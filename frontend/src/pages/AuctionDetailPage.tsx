@@ -48,6 +48,9 @@ export function AuctionDetailPage() {
   const [reason, setReason] = useState('');
 
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  // ПРОБЛЕМА: при потере ответа повторная ставка получала новый Idempotency-Key.
+  // РЕШЕНИЕ: для той же суммы храним исходный ключ до подтверждения результата.
+  const pendingBidRef = useRef<{ amount: number; key: string } | null>(null);
 
   const loadAuction = async () => {
     try {
@@ -96,17 +99,24 @@ export function AuctionDetailPage() {
     if (!bidAmount) return;
     setBidding(true);
     try {
-      const key = crypto.randomUUID();
-      const bid = await placeBid(auctionId, bidAmount, key);
+      if (!pendingBidRef.current || pendingBidRef.current.amount !== bidAmount) {
+        pendingBidRef.current = { amount: bidAmount, key: crypto.randomUUID() };
+      }
+      const bid = await placeBid(auctionId, bidAmount, pendingBidRef.current.key);
+      pendingBidRef.current = null;
       setMyBid(bid);
       message.success('Ставка принята');
       setBidAmount(null);
     } catch (err: unknown) {
       const status = (err as { response?: { status: number } })?.response?.status;
       if (status === 409) {
+        pendingBidRef.current = null;
         message.warning('Конфликт: обновите карточку');
-        loadAuction();
+        void loadAuction();
       } else {
+        // ПРОБЛЕМА: сетевой сбой не означает, что ставка не была сохранена.
+        // РЕШЕНИЕ: запрашиваем фактическое состояние; ключ сохраняется для повтора.
+        void loadAuction();
         const detail = (err as { response?: { data?: { amount_kopecks?: string[]; detail?: string } } })
           ?.response?.data;
         message.error(detail?.amount_kopecks?.[0] ?? detail?.detail ?? 'Ошибка ставки');
