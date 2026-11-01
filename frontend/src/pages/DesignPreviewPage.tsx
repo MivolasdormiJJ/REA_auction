@@ -1,9 +1,9 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
-  ArrowRightOutlined, CheckCircleFilled, ClockCircleOutlined,
+  ArrowRightOutlined, CheckCircleFilled,
   InfoCircleOutlined, LockOutlined, SafetyCertificateOutlined,
-  SearchOutlined, ThunderboltFilled,
+  ThunderboltFilled,
 } from '@ant-design/icons';
 import './DesignPreviewPage.css';
 
