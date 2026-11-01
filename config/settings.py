@@ -143,3 +143,24 @@ if FRONTEND_DIST_DIR.is_dir():
 STATIC_ROOT = BASE_DIR / "staticfiles"
 # Редирект включается только при наличии правильно настроенного HTTPS proxy.
 SECURE_SSL_REDIRECT = not DEBUG and os.environ.get("SECURE_SSL_REDIRECT") == "1"
+
+# ПРОБЛЕМА: email_verified должен подтверждаться реальным письмом, иначе
+# публичная регистрация создаст аккаунты без проверенного адреса.
+# РЕШЕНИЕ: SMTP настраивается секретными переменными Render; без них при
+# DEBUG=0 endpoint регистрации отвечает 503 и никого не создаёт.
+EMAIL_HOST = os.environ.get("EMAIL_HOST", "")
+EMAIL_PORT = int(os.environ.get("EMAIL_PORT", "587"))
+EMAIL_USE_TLS = os.environ.get("EMAIL_USE_TLS", "1") == "1"
+EMAIL_USE_SSL = os.environ.get("EMAIL_USE_SSL", "0") == "1"
+EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", "")
+EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "")
+DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", "REA Auction <no-reply@example.invalid>")
+EMAIL_BACKEND = (
+    "django.core.mail.backends.console.EmailBackend" if DEBUG
+    else "django.core.mail.backends.smtp.EmailBackend"
+)
+REGISTRATION_EMAIL_ENABLED = all([
+    EMAIL_HOST, EMAIL_HOST_USER, EMAIL_HOST_PASSWORD,
+    os.environ.get("DEFAULT_FROM_EMAIL", ""),
+])
+PASSWORD_RESET_TIMEOUT = 60 * 60 * 24
