@@ -32,6 +32,7 @@ function AppRoutes() {
     <Routes>
       {/* ПРОБЛЕМА: макет не должен требовать входа или изменять рабочие маршруты.
           РЕШЕНИЕ: отдельная публичная страница без вызовов API. */}
+      <Route path="/" element={<Navigate to="/design-preview" replace />} />
       <Route path="/design-preview" element={<DesignPreviewPage />} />
       <Route path="/login" element={user ? <Navigate to="/auctions" replace /> : <LoginPage />} />
 
@@ -66,7 +67,9 @@ function AppRoutes() {
 
 export default function App() {
   return (
-    <Router>
+    // ПРОБЛЕМА: GitHub Pages размещает приложение в /REA_auction/, а не в корне сайта.
+    // РЕШЕНИЕ: берём basename из Vite, чтобы маршруты работали локально и онлайн.
+    <Router basename={import.meta.env.BASE_URL}>
       <AuthProvider>
         <AppRoutes />
       </AuthProvider>
