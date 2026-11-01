@@ -1,0 +1,53 @@
+name: Publish design preview to GitHub Pages
+
+on:
+  push:
+    branches: [dev_any]
+    paths:
+      - 'frontend/**'
+      - '.github/workflows/pages.yml'
+  workflow_dispatch:
+
+# ПРОБЛЕМА: две одновременные публикации могли перезаписывать артефакты друг друга.
+# РЕШЕНИЕ: для Pages оставляем только актуальный запуск.
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm ci
+      - name: Build public preview
+        working-directory: frontend
+        env:
+          # ПРОБЛЕМА: статический хостинг не поддерживает backend /api.
+          # РЕШЕНИЕ: публикуем только учебный маршрут и корректный Vite base.
+          GITHUB_PAGES: 'true'
+        run: npm run build
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+      - name: Upload static site
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: frontend/dist
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4
