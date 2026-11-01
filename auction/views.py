@@ -1,6 +1,13 @@
 import hashlib
 import json
 from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.tokens import default_token_generator
+from django.core.mail import send_mail
+from django.conf import settings
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.utils.encoding import force_bytes
+from django.db import IntegrityError
+from urllib.parse import urlencode
 from django.shortcuts import get_object_or_404
 from django.db import transaction
 from django.db.models import Q
@@ -19,6 +26,7 @@ from .serializers import (
     BidSerializer,
     CategorySerializer,
     DecisionInput,
+    RegistrationInput,
 )
 from .services import eligible, transition, place_bid, Conflict, event
 
@@ -31,6 +39,88 @@ class LoginRateThrottle(SimpleRateThrottle):
         # ПРОБЛЕМА: без ограничения попыток можно массово подбирать пароль.
         # РЕШЕНИЕ: лимит попыток входа по IP. В production нужен общий Redis-кеш.
         return self.cache_format % {"scope": self.scope, "ident": self.get_ident(request)}
+
+
+
+class RegisterRateThrottle(SimpleRateThrottle):
+    scope = "register"
+    rate = "3/hour"
+
+    def get_cache_key(self, request, view):
+        # ПРОБЛЕМА: массовая регистрация и отправка писем создают нагрузку.
+        # РЕШЕНИЕ: ограничиваем запросы по IP (в production нужен общий кеш).
+        return self.cache_format % {"scope": self.scope, "ident": self.get_ident(request)}
+
+
+class VerifyRateThrottle(SimpleRateThrottle):
+    scope = "verify"
+    rate = "20/hour"
+
+    def get_cache_key(self, request, view):
+        return self.cache_format % {"scope": self.scope, "ident": self.get_ident(request)}
+
+
+@api_view(["POST"])
+@permission_classes([permissions.AllowAny])
+@throttle_classes([RegisterRateThrottle])
+@csrf_protect
+def register(request):
+    # ПРОБЛЕМА: пока SMTP не настроен, нельзя создавать аккаунты без возможности
+    # подтвердить email. РЕШЕНИЕ: в production регистрация закрыта без SMTP.
+    if not settings.DEBUG and not getattr(settings, "REGISTRATION_EMAIL_ENABLED", False):
+        return Response({"detail": "Регистрация временно недоступна: почта не настроена"}, status=503)
+    serializer = RegistrationInput(data=request.data)
+    serializer.is_valid(raise_exception=True)
+    data = serializer.validated_data
+    user = User(username=data["username"], email=data["email"], email_verified=False)
+    user.set_password(data["password"])
+    try:
+        # Важно: email должен уйти до фиксации транзакции, чтобы SMTP-ошибка
+        # не оставила пользователя, который не может подтвердить адрес.
+        with transaction.atomic():
+            user.save()
+            uid = urlsafe_base64_encode(force_bytes(user.pk))
+            token = default_token_generator.make_token(user)
+            url = request.build_absolute_uri("/verify-email?" + urlencode({"uid": uid, "token": token}))
+            send_mail(
+                "REA Auction — подтверждение email",
+                "Здравствуйте! Подтвердите регистрацию, открыв ссылку:\\n" + url + "\\n\\nЕсли вы не регистрировались, проигнорируйте это письмо.",
+                settings.DEFAULT_FROM_EMAIL,
+                [user.email],
+                fail_silently=False,
+            )
+    except IntegrityError:
+        raise ValidationError({"detail": "Имя пользователя или email уже используются"})
+    except Exception as error:
+        # Не раскрываем SMTP-пароли/настройки или внутренние детали через API.
+        from django.core.mail import BadHeaderError
+        from smtplib import SMTPException
+        if isinstance(error, (SMTPException, OSError, BadHeaderError)):
+            return Response({"detail": "Не удалось отправить письмо подтверждения. Попробуйте позднее."}, status=503)
+        raise
+    return Response({"detail": "Письмо подтверждения отправлено. Проверьте почту."}, status=201)
+
+
+@api_view(["POST"])
+@permission_classes([permissions.AllowAny])
+@throttle_classes([VerifyRateThrottle])
+@csrf_protect
+def verify_email(request):
+    uid, token = request.data.get("uid"), request.data.get("token")
+    if not isinstance(uid, str) or not isinstance(token, str) or len(uid) > 128 or len(token) > 128:
+        raise ValidationError({"detail": "Недействительная ссылка подтверждения"})
+    try:
+        user_id = urlsafe_base64_decode(uid).decode("utf-8")
+        user = User.objects.get(pk=user_id)
+    except (ValueError, TypeError, UnicodeError, OverflowError, User.DoesNotExist):
+        raise ValidationError({"detail": "Недействительная ссылка подтверждения"})
+    if user.email_verified:
+        return Response({"detail": "Email уже подтверждён"})
+    if not default_token_generator.check_token(user, token):
+        raise ValidationError({"detail": "Ссылка недействительна или срок её действия истёк"})
+    user.email_verified = True
+    user.save(update_fields=["email_verified"])
+    return Response({"detail": "Email подтверждён. Теперь можно войти."})
 
 
 class Admitted(permissions.BasePermission):
