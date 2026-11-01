@@ -22,7 +22,6 @@ export function DesignPreviewPage() {
   const [role, setRole] = useState<Role>('bidder');
   const [bids, setBids] = useState<Example[]>(STARTING_BIDS);
   const [closed, setClosed] = useState(false);
-  const [query, setQuery] = useState('');
   const [showExplanation, setShowExplanation] = useState(true);
 
   const ordered = useMemo(() => [...bids].sort((a, b) => a.amount - b.amount), [bids]);
