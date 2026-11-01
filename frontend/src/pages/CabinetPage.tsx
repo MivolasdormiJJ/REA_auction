@@ -1,4 +1,4 @@
-import { Badge, Col, Empty, Row, Space, Spin, Tabs, Typography } from 'antd';
+import { Badge, Col, Empty, Pagination, Row, Space, Spin, Tabs, Typography } from 'antd';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getAuctions } from '../api/auctions';
@@ -37,13 +37,17 @@ function AuctionRow({ auction }: { auction: Auction }) {
 export function CabinetPage() {
   const [auctions, setAuctions] = useState<Auction[]>([]);
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
 
   useEffect(() => {
-    getAuctions({ mine: true })
-      .then((res) => setAuctions(res.results))
+    // ПРОБЛЕМА: кабинет показывал только первую страницу аукционов (20 записей).
+    // РЕШЕНИЕ: добавляем постраничную навигацию по серверному count.
+    getAuctions({ mine: true, page })
+      .then((res) => { setAuctions(res.results); setTotal(res.count); })
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, []);
+  }, [page]);
 
   if (loading) return <Spin style={{ display: 'block', margin: '64px auto' }} />;
 
@@ -88,7 +92,7 @@ export function CabinetPage() {
           {tabItems.length === 0 ? (
             <Empty description="У вас пока нет задач" />
           ) : (
-            <Tabs items={tabItems} />
+            <><Tabs items={tabItems} /><Pagination current={page} pageSize={20} total={total} onChange={setPage} /></>
           )}
         </Col>
       </Row>
