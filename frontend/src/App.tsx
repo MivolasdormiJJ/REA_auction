@@ -9,6 +9,8 @@ import { CatalogPage } from './pages/CatalogPage';
 import { LoginPage } from './pages/LoginPage';
 import { ModerationPage } from './pages/ModerationPage';
 import { ProfilePage } from './pages/ProfilePage';
+import { RegisterPage } from './pages/RegisterPage';
+import { VerifyEmailPage } from './pages/VerifyEmailPage';
 import { DesignPreviewPage } from './pages/DesignPreviewPage';
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
@@ -36,6 +38,8 @@ function AppRoutes() {
       <Route path="/" element={<Navigate to="/design-preview" replace />} />
       <Route path="/design-preview" element={<DesignPreviewPage />} />
       <Route path="/login" element={user ? <Navigate to="/auctions" replace /> : <LoginPage />} />
+      <Route path="/register" element={user ? <Navigate to="/auctions" replace /> : <RegisterPage />} />
+      <Route path="/verify-email" element={<VerifyEmailPage />} />
 
       <Route
         path="/*"
