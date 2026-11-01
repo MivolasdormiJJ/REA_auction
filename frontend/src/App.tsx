@@ -8,6 +8,7 @@ import { CabinetPage } from './pages/CabinetPage';
 import { CatalogPage } from './pages/CatalogPage';
 import { LoginPage } from './pages/LoginPage';
 import { ModerationPage } from './pages/ModerationPage';
+import { ProfilePage } from './pages/ProfilePage';
 import { DesignPreviewPage } from './pages/DesignPreviewPage';
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
@@ -47,6 +48,8 @@ function AppRoutes() {
                 <Route path="/auctions/:id" element={<AuctionDetailPage />} />
                 <Route path="/auctions/:id/edit" element={<AuctionFormPage />} />
                 <Route path="/cabinet" element={<CabinetPage />} />
+                {/* ПРОБЛЕМА: в API нет редактирования аккаунта. РЕШЕНИЕ: отдельный профиль только с достоверными данными /auth/me/. */}
+                <Route path="/profile" element={<ProfilePage />} />
                 <Route
                   path="/moderation"
                   element={
