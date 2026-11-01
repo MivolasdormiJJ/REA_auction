@@ -58,20 +58,27 @@ export function CatalogPage() {
   const [loading, setLoading] = useState(false);
   const [filters, setFilters] = useState<AuctionFilters>({ status: 'open' });
   const [search, setSearch] = useState('');
+  const [error, setError] = useState('');
 
   useEffect(() => {
     getCategories().then(setCategories).catch(() => {});
   }, []);
 
   useEffect(() => {
+    // ПРОБЛЕМА: ответы старых запросов могли перезаписать результаты нового фильтра.
+    // РЕШЕНИЕ: игнорируем результат после смены фильтра или размонтирования.
+    let cancelled = false;
     setLoading(true);
+    setError('');
     getAuctions(filters)
       .then((res) => {
+        if (cancelled) return;
         setAuctions(res.results);
         setTotal(res.count);
       })
-      .catch(() => {})
-      .finally(() => setLoading(false));
+      .catch(() => { if (!cancelled) setError('Не удалось загрузить аукционы'); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
   }, [filters]);
 
   const handleSearch = () => {
@@ -109,6 +116,7 @@ export function CatalogPage() {
         />
       </Space>
 
+      {error && <Typography.Text type="danger">{error}</Typography.Text>}
       {loading ? (
         <Spin style={{ display: 'block', margin: '48px auto' }} />
       ) : auctions.length === 0 ? (
