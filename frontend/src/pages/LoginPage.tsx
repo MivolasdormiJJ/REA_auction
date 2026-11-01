@@ -1,8 +1,10 @@
-import { Form, Input, Button, Card, Typography, Alert } from 'antd';
+import { Alert, Button, Form, Input, Typography } from 'antd';
+import { ArrowRightOutlined, LockOutlined, SafetyCertificateOutlined, UserOutlined } from '@ant-design/icons';
+import { Link, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { login } from '../api/auth';
 import { useAuth } from '../context/AuthContext';
+import '../app-theme.css';
 
 export function LoginPage() {
   const { setUser } = useAuth();
@@ -16,54 +18,57 @@ export function LoginPage() {
     try {
       const user = await login(values.username, values.password);
       setUser(user);
-      navigate('/auctions');
+      navigate('/auctions', { replace: true });
     } catch (err: unknown) {
-      const msg =
-        (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail ??
-        'Неверный логин или пароль';
-      setError(msg);
+      const response = (err as { response?: { status?: number; data?: { detail?: string } } })?.response;
+      // ПРОБЛЕМА: для отсутствующего Django API нельзя сообщать "неверный пароль".
+      // РЕШЕНИЕ: отличаем ошибку подключения от ответа сервера.
+      setError(response?.data?.detail ?? (response ? 'Не удалось войти. Проверьте учётные данные.' : 'Сервер авторизации недоступен. Запустите Django backend.'));
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div
-      style={{
-        minHeight: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        background: '#f0f2f5',
-      }}
-    >
-      <Card style={{ width: 360 }}>
-        <Typography.Title level={3} style={{ textAlign: 'center', marginBottom: 24 }}>
-          REA Аукцион
-        </Typography.Title>
-        {error && <Alert type="error" message={error} style={{ marginBottom: 16 }} />}
-        <Form layout="vertical" onFinish={onFinish}>
-          <Form.Item
-            label="Логин"
-            name="username"
-            rules={[{ required: true, message: 'Введите логин' }]}
-          >
-            <Input autoFocus />
-          </Form.Item>
-          <Form.Item
-            label="Пароль"
-            name="password"
-            rules={[{ required: true, message: 'Введите пароль' }]}
-          >
-            <Input.Password />
-          </Form.Item>
-          <Form.Item>
-            <Button type="primary" htmlType="submit" block loading={loading}>
-              Войти
-            </Button>
-          </Form.Item>
-        </Form>
-      </Card>
-    </div>
+    <main className="rea-login-shell">
+      <section className="rea-login-aside">
+        <Link to="/design-preview" style={{ fontSize: 32, fontWeight: 850, color: 'white' }}>✦ rea.</Link>
+        <div>
+          <div className="rea-login-pill">✦ REA AUCTION PLATFORM</div>
+          <h1 style={{ marginTop: 25 }}>Делаем сложные торги простыми.</h1>
+          <p>Публикуйте задачи, находите исполнителей и участвуйте в прозрачных обратных аукционах с закрытыми предложениями.</p>
+          <div style={{ display: 'flex', gap: 16, alignItems: 'center', flexWrap: 'wrap', color: '#e3e8ff', fontSize: 12, marginTop: 25 }}>
+            <span><SafetyCertificateOutlined /> Прозрачные правила</span>
+            <span><LockOutlined /> Закрытые ставки</span>
+          </div>
+        </div>
+        <Link style={{ color: '#e8eeff', fontSize: 13 }} to="/design-preview">Узнать, как работают торги <ArrowRightOutlined /></Link>
+      </section>
+      <section className="rea-login-form-wrap">
+        <div className="rea-login-card">
+          <div className="rea-page-kicker">ДОБРО ПОЖАЛОВАТЬ</div>
+          <h2>Вход в аккаунт</h2>
+          <p>Введите данные своей подтверждённой учётной записи, чтобы перейти к настоящим аукционам.</p>
+          {error && <Alert type="error" showIcon message={error} style={{ marginBottom: 23 }} />}
+          <Form layout="vertical" size="large" onFinish={onFinish} requiredMark={false}>
+            <Form.Item name="username" label="Имя пользователя" rules={[{ required: true, message: 'Введите имя пользователя' }]}>
+              <Input autoComplete="username" prefix={<UserOutlined style={{ color: '#98a4bb' }} />} placeholder="Ваш логин" />
+            </Form.Item>
+            <Form.Item name="password" label="Пароль" rules={[{ required: true, message: 'Введите пароль' }]}>
+              <Input.Password autoComplete="current-password" prefix={<LockOutlined style={{ color: '#98a4bb' }} />} placeholder="Введите пароль" />
+            </Form.Item>
+            <Form.Item style={{ marginBottom: 15 }}>
+              <Button type="primary" htmlType="submit" block loading={loading}>Войти <ArrowRightOutlined /></Button>
+            </Form.Item>
+          </Form>
+          <Typography.Paragraph type="secondary" style={{ fontSize: 12 }}>
+            Регистрация пользователей через сайт пока не предусмотрена серверным API.
+          </Typography.Paragraph>
+          <div style={{ borderTop: '1px solid #eef1f8', paddingTop: 20, marginTop: 17 }}>
+            <Link to="/design-preview" style={{ color: '#5d68e6', fontSize: 13, fontWeight: 750 }}>Сначала посмотреть демонстрацию →</Link>
+          </div>
+        </div>
+      </section>
+    </main>
   );
 }
