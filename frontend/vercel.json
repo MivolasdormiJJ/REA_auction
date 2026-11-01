@@ -1,12 +1,15 @@
 {
+  "redirects": [
+    {
+      "source": "/",
+      "destination": "/design-preview",
+      "permanent": false
+    }
+  ],
   "rewrites": [
     {
       "source": "/design-preview",
       "destination": "/index.html"
-    },
-    {
-      "source": "/",
-      "destination": "/design-preview"
     }
   ]
 }
