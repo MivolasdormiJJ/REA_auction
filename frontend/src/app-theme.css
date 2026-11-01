@@ -66,3 +66,7 @@ body{margin:0}#root{min-height:100vh}
 @media(max-width:1200px){.rea-auction-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:850px){.rea-app-sidebar{display:none!important}.rea-app-content{padding:24px 17px}.rea-app-topbar{padding:0 17px}.rea-auction-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.rea-login-shell{grid-template-columns:1fr}.rea-login-aside{padding:30px}.rea-login-aside h1{font-size:35px}.rea-login-form-wrap{padding:24px}}
 @media(max-width:600px){.rea-auction-grid{grid-template-columns:1fr}.rea-feature-band{flex-direction:column;align-items:start}.rea-login-aside{gap:20px}.rea-login-card{padding:26px}.rea-app-topbar{height:auto;min-height:68px;flex-wrap:wrap;padding:12px 15px}.rea-app-top-actions{flex-wrap:wrap}}
+
+/* ПРОБЛЕМА: на узком экране скрывается сайдбар. РЕШЕНИЕ: показываем меню только на мобильных. */
+.rea-mobile-menu{display:none!important}
+@media(max-width:850px){.rea-mobile-menu{display:inline-flex!important}}
