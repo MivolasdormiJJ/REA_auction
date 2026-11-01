@@ -266,6 +266,43 @@ class AuctionTests(Fixtures, TestCase):
             self.client.get(f"/api/auctions/{self.a.pk}/").status_code, 404
         )
 
+    def test_create_idempotency_and_conflict(self):
+        # ПРОБЛЕМА: повтор запроса после потери ответа создавал дубликаты заказов.
+        # РЕШЕНИЕ: одинаковый ключ возвращает прежний заказ, другое тело даёт 409.
+        self.client.force_authenticate(self.owner)
+        payload = {
+            "category": self.cat.pk,
+            "title": "Новая учебная задача",
+            "description": "Подробное описание новой учебной задачи.",
+            "budget_kopecks": 150000,
+            "ends_at": (timezone.now() + timedelta(hours=2)).isoformat(),
+            "due_at": (timezone.now() + timedelta(days=2)).isoformat(),
+        }
+        url = "/api/auctions/"
+        first = self.client.post(url, payload, format="json", HTTP_IDEMPOTENCY_KEY="create-1")
+        second = self.client.post(url, payload, format="json", HTTP_IDEMPOTENCY_KEY="create-1")
+        self.assertEqual((first.status_code, second.status_code), (201, 200))
+        self.assertEqual(first.data["id"], second.data["id"])
+        self.assertEqual(Auction.objects.count(), 2)
+        changed = {**payload, "title": "Другая учебная задача"}
+        conflict = self.client.post(url, changed, format="json", HTTP_IDEMPOTENCY_KEY="create-1")
+        self.assertEqual(conflict.status_code, 409)
+        self.assertEqual(Auction.objects.count(), 2)
+
+    def test_create_requires_idempotency_key(self):
+        self.client.force_authenticate(self.owner)
+        response = self.client.post("/api/auctions/", {}, format="json")
+        self.assertEqual(response.status_code, 400)
+
+    def test_transition_rejects_unknown_action(self):
+        # ПРОБЛЕМА: ранее неизвестное действие могло отклонить аукцион.
+        self.a.status = "review"
+        self.a.save(update_fields=["status"])
+        with self.assertRaises(APIException):
+            transition(self.a.pk, self.u, "unexpected", "Причина")
+        self.a.refresh_from_db()
+        self.assertEqual(self.a.status, "review")
+
     def test_invalid_dates(self):
         self.client.force_authenticate(self.owner)
         body = {
@@ -323,6 +360,42 @@ class ConcurrentTests(Fixtures, TransactionTestCase):
 
         with ThreadPoolExecutor(max_workers=len(funcs)) as pool:
             return list(pool.map(run, funcs))
+
+    def test_concurrent_create_distinct_orders(self):
+        # ПРОБЛЕМА: одновременные заказы не были покрыты нагрузочным тестом БД.
+        # РЕШЕНИЕ: проверяем сохранение независимых записей с разных соединений.
+        def create(i):
+            return Auction.objects.create(
+                owner=self.owner, category=self.cat,
+                title=f"Задача {i}",
+                description="Описание одновременного создания заказа.",
+                budget_kopecks=150000,
+                ends_at=timezone.now() + timedelta(hours=2),
+                due_at=timezone.now() + timedelta(days=2),
+            ).pk
+        ids = self.parallel([lambda i=i: create(i) for i in range(20)])
+        self.assertEqual(len(set(ids)), 20)
+
+    def test_concurrent_create_same_key(self):
+        # ПРОБЛЕМА: дубликат мог появиться при одновременных одинаковых POST.
+        # РЕШЕНИЕ: даже конкурентные запросы обязаны вернуть один ID.
+        payload = {
+            "category": self.cat.pk,
+            "title": "Параллельная задача",
+            "description": "Достаточно подробное описание параллельной задачи.",
+            "budget_kopecks": 150000,
+            "ends_at": (timezone.now() + timedelta(hours=2)).isoformat(),
+            "due_at": (timezone.now() + timedelta(days=2)).isoformat(),
+        }
+        def create():
+            client = APIClient()
+            client.force_authenticate(self.owner)
+            response = client.post("/api/auctions/", payload, format="json",
+                                   HTTP_IDEMPOTENCY_KEY="same-key")
+            return response.status_code, response.data["id"]
+        results = self.parallel([create, create])
+        self.assertEqual(sorted(code for code, _ in results), [200, 201])
+        self.assertEqual(len(set(pk for _, pk in results)), 1)
 
     def test_concurrent_repeat(self):
         ids = self.parallel([lambda: self.bid()[0].pk, lambda: self.bid()[0].pk])
