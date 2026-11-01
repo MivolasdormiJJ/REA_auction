@@ -10,7 +10,7 @@ import {
   message,
 } from 'antd';
 import dayjs from 'dayjs';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { createAuction, getAuction, getCategories, patchAuction } from '../api/auctions';
 import type { Category } from '../api/types';
@@ -36,6 +36,9 @@ export function AuctionFormPage() {
   const [loading, setLoading] = useState(isEdit);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  // ПРОБЛЕМА: потеря ответа после создания приводила к дублированию заказа при повторе.
+  // РЕШЕНИЕ: удерживаем ключ для идентичного тела запроса до успеха.
+  const createRequestRef = useRef<{ payload: string; key: string } | null>(null);
 
   useEffect(() => {
     getCategories().then(setCategories).catch(() => {});
@@ -70,9 +73,14 @@ export function AuctionFormPage() {
       due_at: values.due_at.toISOString(),
     };
     try {
+      const serialized = JSON.stringify(payload);
+      if (!createRequestRef.current || createRequestRef.current.payload !== serialized) {
+        createRequestRef.current = { payload: serialized, key: crypto.randomUUID() };
+      }
       const auction = isEdit && auctionId
         ? await patchAuction(auctionId, payload)
-        : await createAuction(payload);
+        : await createAuction(payload, createRequestRef.current.key);
+      createRequestRef.current = null;
       message.success(isEdit ? 'Сохранено' : 'Задача создана');
       navigate(`/auctions/${auction.id}`);
     } catch (err: unknown) {
