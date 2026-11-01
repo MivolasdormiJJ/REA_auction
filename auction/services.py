@@ -55,6 +55,10 @@ def place_bid(auction_id, user, amount, key):
 def transition(auction_id, user, action, reason=""):
     a = Auction.objects.select_for_update().get(pk=auction_id)
     eligible(User.objects.get(pk=user.pk))
+    # ПРОБЛЕМА: неизвестное действие трактовалось как отклонение аукциона.
+    # РЕШЕНИЕ: запрещаем все переходы, кроме явно поддерживаемых.
+    if action not in ("submit", "approve", "reject"):
+        raise ValidationError({"action": "Неизвестное действие"})
     if action == "submit":
         if a.owner_id != user.pk:
             raise PermissionDenied()
