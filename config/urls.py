@@ -12,6 +12,8 @@ from auction.views import (
     me,
     signin,
     signout,
+    register,
+    verify_email,
 )
 
 router = DefaultRouter()
@@ -24,6 +26,8 @@ urlpatterns = [
     path("api/auth/login/", signin),
     path("api/auth/logout/", signout),
     path("api/auth/me/", me),
+    path("api/auth/register/", register),
+    path("api/auth/verify-email/", verify_email),
 ]
 
 urlpatterns += [
