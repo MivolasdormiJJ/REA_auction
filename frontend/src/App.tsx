@@ -8,6 +8,7 @@ import { CabinetPage } from './pages/CabinetPage';
 import { CatalogPage } from './pages/CatalogPage';
 import { LoginPage } from './pages/LoginPage';
 import { ModerationPage } from './pages/ModerationPage';
+import { DesignPreviewPage } from './pages/DesignPreviewPage';
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -29,6 +30,9 @@ function AppRoutes() {
 
   return (
     <Routes>
+      {/* ПРОБЛЕМА: макет не должен требовать входа или изменять рабочие маршруты.
+          РЕШЕНИЕ: отдельная публичная страница без вызовов API. */}
+      <Route path="/design-preview" element={<DesignPreviewPage />} />
       <Route path="/login" element={user ? <Navigate to="/auctions" replace /> : <LoginPage />} />
 
       <Route
