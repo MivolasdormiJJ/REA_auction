@@ -96,7 +96,9 @@ export function AuctionDetailPage() {
   const serverClosed = auction?.status === 'open' && new Date(auction.ends_at) < new Date();
 
   const handleBid = async () => {
-    if (!bidAmount) return;
+    // ПРОБЛЕМА: двойной клик до изменения state мог вызвать два запроса.
+    // РЕШЕНИЕ: не принимаем новый клик во время активной отправки.
+    if (!bidAmount || bidding) return;
     setBidding(true);
     try {
       if (!pendingBidRef.current || pendingBidRef.current.amount !== bidAmount) {
@@ -162,6 +164,14 @@ export function AuctionDetailPage() {
 
   return (
     <div>
+      <div className="rea-page-heading">
+        <div><div className="rea-page-kicker">КАРТОЧКА АУКЦИОНА · №{auction.id}</div><h1>{auction.title}</h1><p>Все условия задачи, сроки и ваша ставка в одном месте.</p></div>
+        <StatusBadge status={auction.status} />
+      </div>
+      <div className="rea-info-strip">
+        🔒 Здесь нельзя посмотреть ставки других участников. В обратном аукционе выигрывает минимальная ставка, но итоговая сумма при двух и более предложениях равна второй минимальной.
+        {' '}<a href={`${import.meta.env.BASE_URL}design-preview#ladder`} style={{ color: '#5565db', fontWeight: 750 }}>Посмотреть пример →</a>
+      </div>
       <Space style={{ marginBottom: 16 }}>
         <Button onClick={() => navigate(-1)}>← Назад</Button>
         {canEdit && (
@@ -239,7 +249,8 @@ export function AuctionDetailPage() {
           )}
 
           {canBid && (
-            <Card title="Сделать ставку">
+            <Card title="Сделать закрытую ставку">
+              <Alert type="info" showIcon style={{ marginBottom: 16 }} message="Ставку можно отправить только один раз" description="После отправки изменить сумму нельзя. Другие участники её не увидят. Укажите цену, за которую готовы выполнить задачу." />
               <Form layout="vertical">
                 <Form.Item label="Сумма (не выше бюджета)">
                   <KopecksInput
