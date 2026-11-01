@@ -1,143 +1,104 @@
-import {
-  Card,
-  Col,
-  Input,
-  Pagination,
-  Row,
-  Select,
-  Spin,
-  Typography,
-  Empty,
-  Space,
-} from 'antd';
+import { Alert, Button, Empty, Input, Pagination, Select, Space, Spin, Tag } from 'antd';
+import { ArrowRightOutlined, ClockCircleOutlined, PlusOutlined, SearchOutlined } from '@ant-design/icons';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getAuctions, getCategories } from '../api/auctions';
 import type { Auction, AuctionFilters, AuctionStatus, Category } from '../api/types';
 import { StatusBadge } from '../components/StatusBadge';
+import '../app-theme.css';
 
-function kopecksToRubles(k: number) {
-  return (k / 100).toLocaleString('ru-RU', { style: 'currency', currency: 'RUB', maximumFractionDigits: 0 });
-}
-
-function AuctionCardItem({ auction }: { auction: Auction }) {
-  return (
-    <Card
-      hoverable
-      size="small"
-      title={
-        <Space>
-          <StatusBadge status={auction.status} />
-          <Link to={`/auctions/${auction.id}`}>{auction.title}</Link>
-        </Space>
-      }
-    >
-      <Typography.Paragraph ellipsis={{ rows: 2 }} style={{ marginBottom: 8 }}>
-        {auction.description}
-      </Typography.Paragraph>
-      <Typography.Text strong>{kopecksToRubles(auction.budget_kopecks)}</Typography.Text>
-      <Typography.Text type="secondary" style={{ marginLeft: 12 }}>
-        до {new Date(auction.ends_at).toLocaleString('ru-RU')}
-      </Typography.Text>
-    </Card>
-  );
-}
-
-const STATUS_OPTIONS: { value: AuctionStatus; label: string }[] = [
-  { value: 'open', label: 'Открытые' },
-  { value: 'closed', label: 'Закрытые' },
+const money = (value: number) => (value / 100).toLocaleString('ru-RU', { style: 'currency', currency: 'RUB', maximumFractionDigits: 0 });
+const STATUSES: { value: AuctionStatus; label: string }[] = [
+  { value: 'open', label: 'Активные' },
+  { value: 'closed', label: 'Завершённые' },
   { value: 'review', label: 'На модерации' },
   { value: 'draft', label: 'Черновики' },
   { value: 'rejected', label: 'Отклонённые' },
+  { value: 'paused', label: 'Приостановленные' },
 ];
+
+function AuctionTile({ auction, category }: { auction: Auction; category?: string }) {
+  return (
+    <article className="rea-auction-tile">
+      <div className="rea-auction-tile-top">
+        <span className="rea-category-icon">{(category ?? 'З').slice(0, 1).toUpperCase()}</span>
+        <StatusBadge status={auction.status} />
+      </div>
+      <div><Tag color="geekblue" style={{ borderRadius: 7 }}>{category ?? 'Задача'}</Tag></div>
+      <h3><Link to={`/auctions/${auction.id}`} style={{ color: 'inherit' }}>{auction.title}</Link></h3>
+      <p>{auction.description.length > 150 ? auction.description.slice(0, 150) + '…' : auction.description}</p>
+      <div style={{ color: '#8796b1', fontSize: 12 }}><ClockCircleOutlined /> Торги до {new Date(auction.ends_at).toLocaleString('ru-RU')}</div>
+      <div className="rea-auction-tile-foot">
+        <div><span className="rea-tile-sub">Максимальный бюджет</span><div className="rea-tile-budget">{money(auction.budget_kopecks)}</div></div>
+        <Link to={`/auctions/${auction.id}`}><Button type="primary">Подробнее <ArrowRightOutlined /></Button></Link>
+      </div>
+    </article>
+  );
+}
 
 export function CatalogPage() {
   const [auctions, setAuctions] = useState<Auction[]>([]);
-  const [total, setTotal] = useState(0);
+  const [count, setCount] = useState(0);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [filters, setFilters] = useState<AuctionFilters>({ status: 'open' });
-  const [search, setSearch] = useState('');
+  const [filters, setFilters] = useState<AuctionFilters>({ status: 'open', page: 1 });
+  const [query, setQuery] = useState('');
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [categoryError, setCategoryError] = useState(false);
 
   useEffect(() => {
-    getCategories().then(setCategories).catch(() => {});
+    let alive = true;
+    getCategories().then(data => { if (alive) setCategories(data); })
+      .catch(() => { if (alive) setCategoryError(true); });
+    return () => { alive = false; };
   }, []);
 
   useEffect(() => {
-    // ПРОБЛЕМА: ответы старых запросов могли перезаписать результаты нового фильтра.
-    // РЕШЕНИЕ: игнорируем результат после смены фильтра или размонтирования.
-    let cancelled = false;
+    // ПРОБЛЕМА: быстрые переключения фильтров могли возвращать неактуальные результаты.
+    // РЕШЕНИЕ: старые ответы не могут перезаписывать данные новой страницы.
+    let alive = true;
     setLoading(true);
     setError('');
-    getAuctions(filters)
-      .then((res) => {
-        if (cancelled) return;
-        setAuctions(res.results);
-        setTotal(res.count);
-      })
-      .catch(() => { if (!cancelled) setError('Не удалось загрузить аукционы'); })
-      .finally(() => { if (!cancelled) setLoading(false); });
-    return () => { cancelled = true; };
+    getAuctions(filters).then(data => {
+      if (!alive) return;
+      setAuctions(data.results);
+      setCount(data.count);
+    }).catch(() => { if (alive) setError('Не удалось получить аукционы. Проверьте подключение к Django API.'); })
+      .finally(() => { if (alive) setLoading(false); });
+    return () => { alive = false; };
   }, [filters]);
-
-  const handleSearch = () => {
-    setFilters((f) => ({ ...f, search: search || undefined, page: 1 }));
-  };
 
   return (
     <div>
-      <Typography.Title level={3}>Каталог аукционов</Typography.Title>
-      <Space wrap style={{ marginBottom: 16 }}>
-        <Input.Search
-          placeholder="Поиск по названию..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          onSearch={handleSearch}
-          style={{ width: 280 }}
-          allowClear
-          onClear={() => setFilters((f) => ({ ...f, search: undefined, page: 1 }))}
-        />
-        <Select
-          placeholder="Статус"
-          allowClear
-          value={filters.status}
-          onChange={(v) => setFilters((f) => ({ ...f, status: v, page: 1 }))}
-          style={{ width: 180 }}
-          options={STATUS_OPTIONS}
-        />
-        <Select
-          placeholder="Категория"
-          allowClear
-          value={filters.category}
-          onChange={(v) => setFilters((f) => ({ ...f, category: v, page: 1 }))}
-          style={{ width: 200 }}
-          options={categories.map((c) => ({ value: c.id, label: c.name }))}
-        />
-      </Space>
-
-      {error && <Typography.Text type="danger">{error}</Typography.Text>}
-      {loading ? (
-        <Spin style={{ display: 'block', margin: '48px auto' }} />
-      ) : auctions.length === 0 ? (
-        <Empty description="Нет аукционов" />
-      ) : (
+      <header className="rea-page-heading">
+        <div><div className="rea-page-kicker">НАЙДИТЕ ПОДХОДЯЩУЮ ЗАДАЧУ</div><h1>Каталог аукционов<span style={{ color: '#6c65e8' }}>.</span></h1><p>Изучайте задачи, сравнивайте бюджеты и участвуйте в закрытых торгах.</p></div>
+        <Link to="/auctions/new"><Button type="primary" size="large" icon={<PlusOutlined />}>Создать заказ</Button></Link>
+      </header>
+      <section className="rea-feature-band">
+        <div><h2>Ваши навыки — новые возможности ✦</h2><p>Выберите интересную задачу и предложите одну закрытую ставку. Побеждает минимальная, а итог определяется правилом второй цены.</p></div>
+        <Link to="/design-preview"><Button size="large">Как работают торги <ArrowRightOutlined /></Button></Link>
+      </section>
+      <div className="rea-info-strip">🔒 Суммы ставок других участников скрыты. Для участия нужно войти в подтверждённый аккаунт, а изменить отправленную ставку нельзя.</div>
+      <div className="rea-filter-card">
+        <Space wrap size="middle" style={{ width: '100%' }}>
+          <Input.Search style={{ width: 310, maxWidth: '100%' }} size="large" allowClear prefix={<SearchOutlined />} placeholder="Поиск по названию или описанию" value={query} onChange={e => setQuery(e.target.value)} onSearch={value => setFilters(prev => ({ ...prev, search: value.trim() || undefined, page: 1 }))} />
+          <Select size="large" style={{ width: 190 }} allowClear value={filters.status} placeholder="Все статусы" options={STATUSES} onChange={value => setFilters(prev => ({ ...prev, status: value, page: 1 }))} />
+          <Select size="large" style={{ width: 210 }} allowClear value={filters.category} placeholder="Все категории" options={categories.map(c => ({ value: c.id, label: c.name }))} onChange={value => setFilters(prev => ({ ...prev, category: value, page: 1 }))} />
+          <Button size="large" onClick={() => { setQuery(''); setFilters({ status: 'open', page: 1 }); }}>Сбросить</Button>
+        </Space>
+      </div>
+      {categoryError && <Alert style={{ marginBottom: 15 }} type="warning" showIcon message="Не удалось загрузить категории" />}
+      {error && <Alert style={{ marginBottom: 15 }} type="error" showIcon message={error} action={<Button onClick={() => setFilters(prev => ({ ...prev }))}>Повторить</Button>} />}
+      <div className="rea-page-heading" style={{ marginBottom: 16 }}>
+        <div><h2 style={{ margin: 0, fontSize: 21 }}>Доступные задачи</h2></div>
+        <span style={{ color: '#8796b0', fontSize: 12 }}>Всего: {count}</span>
+      </div>
+      {loading ? <Spin size="large" style={{ display: 'block', margin: '60px auto' }} /> : error ? null : auctions.length === 0 ? <Empty description="По выбранным фильтрам задач не найдено" /> : (
         <>
-          <Row gutter={[16, 16]}>
-            {auctions.map((a) => (
-              <Col key={a.id} xs={24} sm={12} lg={8}>
-                <AuctionCardItem auction={a} />
-              </Col>
-            ))}
-          </Row>
-          <Pagination
-            style={{ marginTop: 24, textAlign: 'right' }}
-            current={filters.page ?? 1}
-            pageSize={20}
-            total={total}
-            onChange={(p) => setFilters((f) => ({ ...f, page: p }))}
-            showTotal={(t) => `Всего: ${t}`}
-          />
+          <div className="rea-auction-grid">
+            {auctions.map(a => <AuctionTile key={a.id} auction={a} category={categories.find(c => c.id === a.category)?.name} />)}
+          </div>
+          <Pagination style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 27 }} current={filters.page ?? 1} pageSize={20} total={count} showSizeChanger={false} showTotal={value => `Всего: ${value}`} onChange={page => setFilters(prev => ({ ...prev, page }))} />
         </>
       )}
     </div>
