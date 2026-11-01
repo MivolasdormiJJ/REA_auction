@@ -3,6 +3,8 @@
 import os
 from pathlib import Path
 
+import dj_database_url
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 DEBUG = os.environ.get("DEBUG", "1") == "1"
@@ -19,12 +21,19 @@ ALLOWED_HOSTS = os.environ.get(
     "ALLOWED_HOSTS",
     "localhost,127.0.0.1,testserver",
 ).split(",")
+# ПРОБЛЕМА: динамический домен Railway нельзя предугадать.
+# РЕШЕНИЕ: разрешаем выданный домен, а не любой host.
+railway_domain = os.environ.get("RAILWAY_PUBLIC_DOMAIN", "").strip()
+if railway_domain:
+    ALLOWED_HOSTS.append(railway_domain)
 
 # Фронтенд на Vite (порт 5173) проксирует /api, Origin браузера остаётся его
 CSRF_TRUSTED_ORIGINS = os.environ.get(
     "CSRF_TRUSTED_ORIGINS",
     "http://localhost:5173,http://127.0.0.1:5173",
 ).split(",")
+if railway_domain:
+    CSRF_TRUSTED_ORIGINS.append("https://" + railway_domain)
 
 INSTALLED_APPS = [
     "django.contrib.auth",
@@ -37,6 +46,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -58,7 +68,11 @@ DATABASES = {
     },
 }
 
-if os.environ.get("POSTGRES_HOST"):
+# ПРОБЛЕМА: Railway выдаёт PostgreSQL-подключение через DATABASE_URL.
+# РЕШЕНИЕ: поддерживаем URL без поломки локальной POSTGRES_HOST-конфигурации.
+if os.environ.get("DATABASE_URL"):
+    DATABASES = {"default": dj_database_url.config(conn_max_age=600, conn_health_checks=True)}
+elif os.environ.get("POSTGRES_HOST"):
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.postgresql",
@@ -89,6 +103,10 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SAMESITE = "Lax"
 SESSION_COOKIE_SECURE = not DEBUG
+# ПРОБЛЕМА: Django за управляемым HTTPS-прокси может ошибочно считать запрос HTTP.
+# РЕШЕНИЕ: использовать X-Forwarded-Proto только при явно включённой настройке.
+if os.environ.get("TRUST_PROXY_HTTPS") == "1":
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 CSRF_COOKIE_SECURE = not DEBUG
 
@@ -116,3 +134,11 @@ TEMPLATES = [
 ]
 
 STATIC_URL = "/static/"
+# ПРОБЛЕМА: GitHub Pages не может обслуживать защищённые Django-сессии.
+# РЕШЕНИЕ: в production React и Django API работают с одного HTTPS-домена.
+FRONTEND_DIST_DIR = BASE_DIR / "frontend" / "dist"
+if FRONTEND_DIST_DIR.is_dir():
+    WHITENOISE_ROOT = FRONTEND_DIST_DIR
+STATIC_ROOT = BASE_DIR / "staticfiles"
+# Редирект включается только при наличии правильно настроенного HTTPS proxy.
+SECURE_SSL_REDIRECT = not DEBUG and os.environ.get("SECURE_SSL_REDIRECT") == "1"
