@@ -1,0 +1,18 @@
+# Настройки инструментов форматирования backend, см. docs/STYLE_GUIDE.md, раздел 1.2
+
+[tool.black]
+line-length = 88
+target-version = ["py312"]
+extend-exclude = "migrations"
+
+[tool.ruff]
+line-length = 88
+target-version = "py312"
+extend-exclude = ["migrations", "frontend"]
+
+[tool.ruff.lint]
+# E/W — PEP 8, F — pyflakes, I — порядок импортов, N — именование, B — типовые ошибки
+select = ["E", "W", "F", "I", "N", "B"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["auction", "config"]

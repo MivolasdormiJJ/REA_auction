@@ -4,12 +4,16 @@ import { Link } from 'react-router-dom';
 import { getAuctions } from '../api/auctions';
 import type { Auction, AuctionStatus } from '../api/types';
 import { StatusBadge } from '../components/StatusBadge';
+import { kopecksToRubles } from '../utils/format';
 
-function kopecksToRubles(k: number) {
-  return (k / 100).toLocaleString('ru-RU', { style: 'currency', currency: 'RUB', maximumFractionDigits: 0 });
-}
-
-const CABINET_STATUSES: AuctionStatus[] = ['draft', 'rejected', 'review', 'open', 'closed', 'paused'];
+const CABINET_STATUSES: AuctionStatus[] = [
+  'draft',
+  'rejected',
+  'review',
+  'open',
+  'closed',
+  'paused',
+];
 
 function AuctionRow({ auction }: { auction: Auction }) {
   return (

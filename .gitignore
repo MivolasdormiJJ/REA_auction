@@ -30,3 +30,5 @@ Thumbs.db
 build/
 dist/
 *.egg-info/
+# Локальная база данных
+db.sqlite3

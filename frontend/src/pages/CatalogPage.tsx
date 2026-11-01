@@ -15,10 +15,7 @@ import { Link } from 'react-router-dom';
 import { getAuctions, getCategories } from '../api/auctions';
 import type { Auction, AuctionFilters, AuctionStatus, Category } from '../api/types';
 import { StatusBadge } from '../components/StatusBadge';
-
-function kopecksToRubles(k: number) {
-  return (k / 100).toLocaleString('ru-RU', { style: 'currency', currency: 'RUB', maximumFractionDigits: 0 });
-}
+import { kopecksToRubles } from '../utils/format';
 
 function AuctionCardItem({ auction }: { auction: Auction }) {
   return (

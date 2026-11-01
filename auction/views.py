@@ -1,14 +1,14 @@
 from django.contrib.auth import authenticate, login, logout
-from django.shortcuts import get_object_or_404
 from django.db import transaction
 from django.db.models import Q
 from django.middleware.csrf import get_token
-from django.utils.decorators import method_decorator
+from django.shortcuts import get_object_or_404
 from django.views.decorators.csrf import csrf_protect
-from rest_framework import viewsets, permissions, status
+from rest_framework import permissions, viewsets
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.response import Response
+
 from .models import Auction, Category
 from .serializers import (
     AuctionSerializer,
@@ -17,7 +17,16 @@ from .serializers import (
     CategorySerializer,
     DecisionInput,
 )
-from .services import eligible, transition, place_bid, Conflict, event
+from .services import (
+    EDITABLE_STATUSES,
+    Conflict,
+    eligible,
+    event,
+    place_bid,
+    transition,
+)
+
+Status = Auction.Status
 
 
 class Admitted(permissions.BasePermission):
@@ -82,10 +91,10 @@ class AuctionViewSet(viewsets.ModelViewSet):
     http_method_names = ["get", "post", "patch", "head", "options"]
 
     def get_queryset(self):
-        u = self.request.user
-        visible = Q(owner=u) | Q(status__in=["open", "closed"])
-        if u.has_perm("auction.moderate_auction"):
-            visible |= Q(status="review")
+        user = self.request.user
+        visible = Q(owner=user) | Q(status__in=[Status.OPEN, Status.CLOSED])
+        if user.has_perm("auction.moderate_auction"):
+            visible |= Q(status=Status.REVIEW)
         qs = Auction.objects.filter(visible).order_by("-id")
         if self.action == "list":
             for param in ["status", "category"]:
@@ -97,7 +106,7 @@ class AuctionViewSet(viewsets.ModelViewSet):
                         )
                     qs = qs.filter(**{param: value})
             if self.request.query_params.get("mine") == "1":
-                qs = qs.filter(owner=u)
+                qs = qs.filter(owner=user)
             if self.request.query_params.get("search"):
                 qs = qs.filter(
                     Q(title__icontains=self.request.query_params["search"])
@@ -114,18 +123,18 @@ class AuctionViewSet(viewsets.ModelViewSet):
         # Блокировка та же, что при публикации: нельзя изменить условия
         # между проверкой черновика и записью опубликованного аукциона.
         with transaction.atomic():
-            a = get_object_or_404(
+            auction = get_object_or_404(
                 self.get_queryset().select_for_update(), pk=kwargs["pk"]
             )
-            if a.owner_id != request.user.pk:
+            if auction.owner_id != request.user.pk:
                 raise PermissionDenied()
-            if a.status not in ("draft", "rejected"):
+            if auction.status not in EDITABLE_STATUSES:
                 raise Conflict("Условия заморожены после отправки на модерацию")
-            s = self.get_serializer(a, data=request.data, partial=True)
-            s.is_valid(raise_exception=True)
-            s.save()
-            event(a, request.user, "edited")
-            return Response(s.data)
+            serializer = self.get_serializer(auction, data=request.data, partial=True)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            event(auction, request.user, "edited")
+            return Response(serializer.data)
 
     def do_transition(self, request, action):
         a = self.get_object()

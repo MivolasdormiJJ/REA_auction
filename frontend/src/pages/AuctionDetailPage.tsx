@@ -26,11 +26,7 @@ import type { Auction, Bid } from '../api/types';
 import { StatusBadge } from '../components/StatusBadge';
 import { KopecksInput } from '../components/KopecksInput';
 import { useAuth } from '../context/AuthContext';
-
-function kopecksToRubles(k: number | null) {
-  if (k == null) return '—';
-  return (k / 100).toLocaleString('ru-RU', { style: 'currency', currency: 'RUB', maximumFractionDigits: 0 });
-}
+import { kopecksToRubles } from '../utils/format';
 
 export function AuctionDetailPage() {
   const { id } = useParams<{ id: string }>();
