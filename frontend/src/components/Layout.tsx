@@ -1,5 +1,5 @@
-import { Avatar, Button, Layout, Menu, Typography } from 'antd';
-import { AppstoreOutlined, BookOutlined, DashboardOutlined, LogoutOutlined, PlusOutlined, SafetyCertificateOutlined, UserOutlined } from '@ant-design/icons';
+import { Avatar, Button, Dropdown, Layout, Menu, Typography } from 'antd';
+import { AppstoreOutlined, BookOutlined, DashboardOutlined, LogoutOutlined, MenuOutlined, PlusOutlined, SafetyCertificateOutlined, UserOutlined } from '@ant-design/icons';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { logout } from '../api/auth';
@@ -62,6 +62,17 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         <header className="rea-app-topbar">
           <span className="rea-app-breadcrumb">Рабочее пространство / <strong>{selectedKey === 'profile' ? 'Профиль' : selectedKey === 'cabinet' ? 'Мои заказы' : selectedKey === 'moderation' ? 'Модерация' : 'Аукционы'}</strong></span>
           <div className="rea-app-top-actions">
+            {/* ПРОБЛЕМА: на телефоне сайдбар скрыт, и профиль/кабинет были недоступны.
+                РЕШЕНИЕ: мобильное выпадающее меню с теми же маршрутами. */}
+            <Dropdown menu={{ items: [
+              { key: 'catalog', label: <Link to="/auctions">Каталог аукционов</Link> },
+              { key: 'cabinet', label: <Link to="/cabinet">Мои заказы</Link> },
+              { key: 'profile', label: <Link to="/profile">Мой профиль</Link> },
+              { key: 'guide', label: <Link to="/design-preview">Как работают торги</Link> },
+              ...(user?.can_moderate ? [{ key: 'moderation', label: <Link to="/moderation">Модерация</Link> }] : []),
+            ] }}>
+              <Button className="rea-mobile-menu" icon={<MenuOutlined />}>Меню</Button>
+            </Dropdown>
             <Button icon={<BookOutlined />} onClick={() => navigate('/design-preview')}>Правила</Button>
             <Button type="primary" icon={<PlusOutlined />} onClick={() => navigate('/auctions/new')}>Новая задача</Button>
             <Button icon={<LogoutOutlined />} onClick={handleLogout}>Выйти</Button>
