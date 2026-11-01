@@ -92,6 +92,14 @@ SESSION_COOKIE_SECURE = not DEBUG
 
 CSRF_COOKIE_SECURE = not DEBUG
 
+# ПРОБЛЕМА: без production-политик браузер может получить менее защищённые ответы.
+# РЕШЕНИЕ: включаем дополнительные ограничения при DEBUG=False.
+SECURE_CONTENT_TYPE_NOSNIFF = True
+SECURE_HSTS_SECONDS = 31536000 if not DEBUG else 0
+SECURE_HSTS_INCLUDE_SUBDOMAINS = not DEBUG
+SECURE_REFERRER_POLICY = 'same-origin'
+X_FRAME_OPTIONS = 'DENY'
+
 
 TEMPLATES = [
     {
