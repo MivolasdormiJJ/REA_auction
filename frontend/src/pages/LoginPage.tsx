@@ -62,7 +62,7 @@ export function LoginPage() {
             </Form.Item>
           </Form>
           <Typography.Paragraph type="secondary" style={{ fontSize: 12 }}>
-            Регистрация пользователей через сайт пока не предусмотрена серверным API.
+            Ещё нет аккаунта? <Link to="/register" style={{ color: '#5d68e6', fontWeight: 750 }}>Зарегистрироваться</Link>
           </Typography.Paragraph>
           <div style={{ borderTop: '1px solid #eef1f8', paddingTop: 20, marginTop: 17 }}>
             <Link to="/design-preview" style={{ color: '#5d68e6', fontSize: 13, fontWeight: 750 }}>Сначала посмотреть демонстрацию →</Link>
