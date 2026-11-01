@@ -33,8 +33,10 @@ export async function getAuction(id: number): Promise<Auction> {
   return data;
 }
 
-export async function createAuction(payload: AuctionCreatePayload): Promise<Auction> {
-  const { data } = await client.post<Auction>('/auctions/', payload);
+export async function createAuction(payload: AuctionCreatePayload, key: string): Promise<Auction> {
+  // ПРОБЛЕМА: повтор POST без ключа мог создать дубликат заказа.
+  // РЕШЕНИЕ: передаём неизменный ключ одной попытки создания.
+  const { data } = await client.post<Auction>('/auctions/', payload, { headers: { 'Idempotency-Key': key } });
   return data;
 }
 
