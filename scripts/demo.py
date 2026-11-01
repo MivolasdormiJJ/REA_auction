@@ -53,6 +53,7 @@ a = owner.call(
         "ends_at": end.isoformat(),
         "due_at": (end + timedelta(days=1)).isoformat(),
     },
+    key="demo-create-order",
 )
 path = "/api/auctions/" + str(a["id"]) + "/"
 owner.call("POST", path + "submit/", {})
