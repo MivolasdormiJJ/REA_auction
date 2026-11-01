@@ -69,14 +69,8 @@ export function ModerationPage() {
 
   return (
     <div>
-      <Space style={{ marginBottom: 16 }}>
-        <Typography.Title level={3} style={{ margin: 0 }}>
-          Очередь модерации
-        </Typography.Title>
-        <Button onClick={load} loading={loading}>
-          Обновить
-        </Button>
-      </Space>
+      <header className="rea-page-heading"><div><div className="rea-page-kicker">КОНТРОЛЬ КАЧЕСТВА</div><h1>Очередь модерации</h1><p>Проверяйте условия задач перед публикацией для исполнителей.</p></div><Button size="large" onClick={load} loading={loading}>Обновить список</Button></header>
+      <div className="rea-info-strip">Каждое решение требует причины. Вы не можете модерировать собственные заказы.</div>
 
       {loading ? (
         <Spin style={{ display: 'block', margin: '64px auto' }} />
