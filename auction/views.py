@@ -65,41 +65,19 @@ class VerifyRateThrottle(SimpleRateThrottle):
 @throttle_classes([RegisterRateThrottle])
 @csrf_protect
 def register(request):
-    # ПРОБЛЕМА: пока SMTP не настроен, нельзя создавать аккаунты без возможности
-    # подтвердить email. РЕШЕНИЕ: в production регистрация закрыта без SMTP.
-    if not settings.DEBUG and not getattr(settings, "REGISTRATION_EMAIL_ENABLED", False):
-        return Response({"detail": "Регистрация временно недоступна: почта не настроена"}, status=503)
+    # Регистрация без email-подтверждения: почта сохраняется как контактная.
+    # Проверка уникальности и пароля выполняется сериализатором; права модератора не выдаются.
     serializer = RegistrationInput(data=request.data)
     serializer.is_valid(raise_exception=True)
     data = serializer.validated_data
-    user = User(username=data["username"], email=data["email"], email_verified=False)
+    user = User(username=data["username"], email=data["email"], email_verified=True)
     user.set_password(data["password"])
     try:
-        # Важно: email должен уйти до фиксации транзакции, чтобы SMTP-ошибка
-        # не оставила пользователя, который не может подтвердить адрес.
         with transaction.atomic():
             user.save()
-            uid = urlsafe_base64_encode(force_bytes(user.pk))
-            token = default_token_generator.make_token(user)
-            url = request.build_absolute_uri("/verify-email?" + urlencode({"uid": uid, "token": token}))
-            send_mail(
-                "REA Auction — подтверждение email",
-                "Здравствуйте! Подтвердите регистрацию, открыв ссылку:\n" + url + "\n\nЕсли вы не регистрировались, проигнорируйте это письмо.",
-                settings.DEFAULT_FROM_EMAIL,
-                [user.email],
-                fail_silently=False,
-            )
     except IntegrityError:
         raise ValidationError({"detail": "Имя пользователя или email уже используются"})
-    except Exception as error:
-        # Не раскрываем SMTP-пароли/настройки или внутренние детали через API.
-        from django.core.mail import BadHeaderError
-        from smtplib import SMTPException
-        if isinstance(error, (SMTPException, OSError, BadHeaderError)):
-            return Response({"detail": "Не удалось отправить письмо подтверждения. Попробуйте позднее."}, status=503)
-        raise
-    return Response({"detail": "Письмо подтверждения отправлено. Проверьте почту."}, status=201)
-
+    return Response({"detail": "Аккаунт создан. Теперь можно войти."}, status=201)
 
 @api_view(["POST"])
 @permission_classes([permissions.AllowAny])
