@@ -28,9 +28,10 @@ def event(auction, actor, action, reason=""):
 @transaction.atomic
 def place_bid(auction_id, user, amount, key):
     a = Auction.objects.select_for_update().get(pk=auction_id)
-    # Пользователь повторно читается внутри транзакции; блокировка не берётся
-    # по пользователю, чтобы избежать взаимной блокировки разных аукционов.
-    eligible(User.objects.get(pk=user.pk))
+    # ПРОБЛЕМА: допуск пользователя мог быть отозван сразу после проверки,
+    # но до коммита ставки. РЕШЕНИЕ: блокируем строку пользователя после
+    # блокировки аукциона и удерживаем до коммита (единый порядок блокировок).
+    eligible(User.objects.select_for_update().get(pk=user.pk))
     if a.owner_id == user.pk:
         raise PermissionDenied("Нельзя ставить на свою задачу")
     old = Bid.objects.filter(auction=a, bidder=user, idempotency_key=key).first()
@@ -91,11 +92,13 @@ def close_auction(auction_id):
         return a
     # Исключение участника меняет вторую цену. Вместо тихого перерасчёта
     # останавливаем торги и сохраняем историю для решения следующего спринта.
-    if (
-        not a.owner.is_active
-        or not a.owner.email_verified
-        or a.bids.filter(models_invalid_bidder()).exists()
-    ):
+    # ПРОБЛЕМА: отзыв допуска во время закрытия мог изменить список допустимых ставок.
+    # РЕШЕНИЕ: блокируем участников в одном порядке до расчёта победителя.
+    users = list(User.objects.select_for_update().filter(
+        pk__in=[a.owner_id, *a.bids.values_list('bidder_id', flat=True)]
+    ).order_by('pk'))
+    invalid = any(not u.is_active or not u.email_verified for u in users)
+    if invalid:
         a.status = "paused"
         a.save(update_fields=["status"])
         event(a, None, "paused", "Участник заблокирован или допуск отозван")
