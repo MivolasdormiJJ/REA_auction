@@ -115,8 +115,3 @@ def close_auction(auction_id):
     event(a, None, "closed")
     return a
 
-
-def models_invalid_bidder():
-    from django.db.models import Q
-
-    return Q(bidder__is_active=False) | Q(bidder__email_verified=False)
