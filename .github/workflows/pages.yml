@@ -44,6 +44,10 @@ jobs:
         run: npm run build
       - name: Configure Pages
         uses: actions/configure-pages@v5
+        with:
+          # ПРОБЛЕМА: в новом репозитории Pages может ещё не существовать.
+          # РЕШЕНИЕ: попросим GitHub создать Pages при наличии прав.
+          enablement: true
       - name: Upload static site
         uses: actions/upload-pages-artifact@v3
         with:
