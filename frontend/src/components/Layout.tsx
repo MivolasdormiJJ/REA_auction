@@ -1,77 +1,79 @@
-import { Layout as AntLayout, Menu, Button, Space, Typography } from 'antd';
+import { Avatar, Button, Layout, Menu, Typography } from 'antd';
+import { AppstoreOutlined, BookOutlined, DashboardOutlined, LogoutOutlined, PlusOutlined, SafetyCertificateOutlined, UserOutlined } from '@ant-design/icons';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { logout } from '../api/auth';
+import '../app-theme.css';
 
-const { Header, Content } = AntLayout;
+const { Sider, Content } = Layout;
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const { user, setUser } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
-
-  const selectedKey = location.pathname.startsWith('/cabinet')
-    ? 'cabinet'
-    : location.pathname.startsWith('/moderation')
-    ? 'moderation'
-    : location.pathname.startsWith('/auctions/new')
-    ? 'new'
+  const pathname = location.pathname;
+  const selectedKey = pathname.startsWith('/profile') ? 'profile'
+    : pathname.startsWith('/cabinet') ? 'cabinet'
+    : pathname.startsWith('/moderation') ? 'moderation'
     : 'catalog';
 
   const handleLogout = async () => {
-    await logout().catch(() => {});
+    try {
+      await logout();
+    } catch {
+      // ПРОБЛЕМА: при временной сетевой ошибке нельзя притворяться, что сервер завершил сессию.
+      // РЕШЕНИЕ: остаёмся на странице, пользователь сможет попробовать ещё раз.
+      return;
+    }
     setUser(null);
-    navigate('/login');
+    navigate('/login', { replace: true });
   };
 
-  const menuItems = [
-    { key: 'catalog', label: <Link to="/auctions">Каталог</Link> },
-    { key: 'cabinet', label: <Link to="/cabinet">Мой кабинет</Link> },
-    // ПРОБЛЕМА: пользователи не сразу понимают правила закрытых ставок и второй цены.
-    // РЕШЕНИЕ: делаем обучающий макет доступным из основного меню.
-    { key: 'guide', label: <Link to="/design-preview">Как работают торги</Link> },
-    ...(user?.can_moderate
-      ? [{ key: 'moderation', label: <Link to="/moderation">Модерация</Link> }]
-      : []),
+  const items = [
+    { key: 'catalog', icon: <AppstoreOutlined />, label: <Link to="/auctions">Каталог аукционов</Link> },
+    { key: 'cabinet', icon: <DashboardOutlined />, label: <Link to="/cabinet">Мои заказы</Link> },
+    { key: 'profile', icon: <UserOutlined />, label: <Link to="/profile">Мой профиль</Link> },
+    ...(user?.can_moderate ? [{ key: 'moderation', icon: <SafetyCertificateOutlined />, label: <Link to="/moderation">Модерация</Link> }] : []),
   ];
 
   return (
-    <AntLayout style={{ minHeight: '100vh' }}>
-      <Header
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          padding: '0 24px',
-        }}
-      >
-        <Space>
-          <Typography.Text strong style={{ color: '#fff', fontSize: 18, marginRight: 24 }}>
-            REA Аукцион
-          </Typography.Text>
-          <Menu
-            theme="dark"
-            mode="horizontal"
-            selectedKeys={[selectedKey]}
-            items={menuItems}
-            style={{ background: 'transparent', border: 'none', minWidth: 320 }}
-          />
-        </Space>
-        {user && (
-          <Space>
-            <Button type="link" style={{ color: '#fff' }} onClick={() => navigate('/auctions/new')}>
-              + Новая задача
-            </Button>
-            <Typography.Text style={{ color: '#aaa' }}>{user.username}</Typography.Text>
-            <Button size="small" onClick={handleLogout}>
-              Выйти
-            </Button>
-          </Space>
-        )}
-      </Header>
-      <Content style={{ padding: '24px 48px', maxWidth: 1200, margin: '0 auto', width: '100%' }}>
-        {children}
-      </Content>
-    </AntLayout>
+    <Layout className="rea-app">
+      <Sider width={248} theme="light" className="rea-app-sidebar" style={{ display: 'flex', flexDirection: 'column' }}>
+        <div className="rea-app-brand"><span className="rea-app-mark">✦</span><span>rea.<small>AUCTION PLATFORM</small></span></div>
+        <div className="rea-app-section-label">РАБОЧЕЕ ПРОСТРАНСТВО</div>
+        <nav className="rea-app-nav" aria-label="Основная навигация">
+          <Menu mode="inline" selectedKeys={[selectedKey]} items={items} />
+        </nav>
+        <div className="rea-app-section-label" style={{ marginTop: 29 }}>ПОМОЩЬ</div>
+        <nav className="rea-app-nav" aria-label="Помощь">
+          <Menu mode="inline" selectable={false} items={[{ key: 'guide', icon: <BookOutlined />, label: <Link to="/design-preview">Как работают торги</Link> }]} />
+        </nav>
+        <div className="rea-app-sidebar-bottom" style={{ marginTop: 40 }}>
+          <strong>Впервые на аукционе?</strong>
+          <p>Узнайте, как предложить цену и почему победитель определяется по принципу второй цены.</p>
+          <Link to="/design-preview">Посмотреть пример →</Link>
+        </div>
+        <div className="rea-app-user">
+          <Avatar className="rea-app-avatar">{user?.username.slice(0, 2).toUpperCase()}</Avatar>
+          <div><div className="rea-app-user-name">{user?.username}</div><div className="rea-app-user-role">{user?.can_moderate ? 'Модератор' : 'Участник'}</div></div>
+        </div>
+      </Sider>
+      <Layout style={{ background: 'transparent', minWidth: 0 }}>
+        <header className="rea-app-topbar">
+          <span className="rea-app-breadcrumb">Рабочее пространство / <strong>{selectedKey === 'profile' ? 'Профиль' : selectedKey === 'cabinet' ? 'Мои заказы' : selectedKey === 'moderation' ? 'Модерация' : 'Аукционы'}</strong></span>
+          <div className="rea-app-top-actions">
+            <Button icon={<BookOutlined />} onClick={() => navigate('/design-preview')}>Правила</Button>
+            <Button type="primary" icon={<PlusOutlined />} onClick={() => navigate('/auctions/new')}>Новая задача</Button>
+            <Button icon={<LogoutOutlined />} onClick={handleLogout}>Выйти</Button>
+          </div>
+        </header>
+        {/* ПРОБЛЕМА: тёмное меню и узкий контент отличались от согласованного светлого SaaS-макета.
+            РЕШЕНИЕ: единая оболочка с читаемой навигацией и адаптивной рабочей областью. */}
+        <Content className="rea-app-content">{children}</Content>
+        <footer style={{ textAlign: 'center', padding: '0 20px 24px', color: '#a2adc1', fontSize: 11 }}>
+          <Typography.Text type="secondary">REA Auction · Ставки участников остаются закрытыми</Typography.Text>
+        </footer>
+      </Layout>
+    </Layout>
   );
 }
