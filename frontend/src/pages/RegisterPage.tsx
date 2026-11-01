@@ -48,12 +48,12 @@ export function RegisterPage() {
           <h2>Регистрация</h2>
           {success ? (
             <>
-              <Alert type="success" showIcon message="Проверьте вашу почту" description="Мы отправили письмо со ссылкой для подтверждения email. После подтверждения можно войти." style={{ marginBottom: 22 }} />
+              <Alert type="success" showIcon message="Аккаунт создан" description="Подтверждение email не требуется. Теперь можно войти с вашим логином и паролем." style={{ marginBottom: 22 }} />
               <Link to="/login"><Button size="large" block type="primary">Перейти ко входу</Button></Link>
             </>
           ) : (
             <>
-              <p>Заполните поля и подтвердите email по ссылке из письма.</p>
+              <p>Введите логин, адрес электронной почты и надёжный пароль. Подтверждение почты не требуется.</p>
               {error && <Alert type="error" showIcon message={error} style={{ marginBottom: 20 }} />}
               <Form<RegistrationForm> layout="vertical" size="large" requiredMark={false} onFinish={submit}>
                 <Form.Item name="username" label="Имя пользователя" rules={[{ required: true, message: 'Укажите логин' }, { min: 3, message: 'Не менее 3 символов' }]}>
@@ -68,8 +68,8 @@ export function RegisterPage() {
                 <Form.Item name="confirm" label="Повторите пароль" dependencies={['password']} rules={[{ required: true, message: 'Повторите пароль' }, ({ getFieldValue }) => ({ validator(_, value: string) { return value === getFieldValue('password') ? Promise.resolve() : Promise.reject(new Error('Пароли не совпадают')); } })]}>
                   <Input.Password autoComplete="new-password" prefix={<LockOutlined />} placeholder="Подтверждение пароля" />
                 </Form.Item>
-                {/* ПРОБЛЕМА: кнопка регистрации не должна делать пользователя активным без проверки email.
-                    РЕШЕНИЕ: после POST показываем экран ожидания письма, а не авторизуем автоматически. */}
+                {/* ПРОБЛЕМА: регистрации раньше требовалось письмо.
+                    РЕШЕНИЕ: после успешного создания аккаунта предлагаем сразу войти. */}
                 <Button type="primary" htmlType="submit" block loading={pending}>Создать аккаунт <ArrowRightOutlined /></Button>
               </Form>
             </>
