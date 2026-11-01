@@ -5,3 +5,31 @@
 @media(max-width:1200px){.rea-sidebar{width:206px;flex-basis:206px}.rea-content{padding:27px}.rea-header{padding:0 27px}.rea-hero-decoration{opacity:.45}.rea-steps{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:900px){.rea-sidebar{display:none}.rea-hero-decoration{opacity:.25}.rea-ladder-grid{grid-template-columns:1fr}.rea-intro h1,.rea-intro p{max-width:75%}}
 @media(max-width:610px){.rea-header{height:62px;padding:0 17px}.rea-demo-tag{font-size:9px}.rea-content{padding:18px}.rea-intro{padding:30px 23px;min-height:0}.rea-intro h1{font-size:31px;max-width:100%}.rea-intro p{max-width:100%}.rea-hero-decoration{display:none}.rea-section-header{align-items:stretch;flex-direction:column}.rea-steps{grid-template-columns:1fr}.rea-step{min-height:0}.rea-role{align-self:flex-start}.rea-ladder-card,.rea-result{padding:18px}.rea-illustration-label{align-self:flex-start}.rea-endcap{flex-direction:column;align-items:start}.rea-footer{flex-direction:column}.rea-notice{align-items:start}}
+
+/* ПРОБЛЕМА: горизонтальная диаграмма скрывала смысл "лестницы" и выглядела бледно.
+   РЕШЕНИЕ: вертикальная последовательность ступеней с явными акцентами победителя
+   (изумрудный) и второй цены (янтарный), без раскрытия реальных ставок. */
+.rea-stair-guide{background:#eff4ff;border-radius:12px;padding:13px 16px;margin-bottom:20px;font-size:12px;color:#526382}
+.rea-stair-guide strong{color:#495ce0}
+.rea-vertical-stairs{display:grid;gap:10px;position:relative;padding-left:6px;margin-bottom:24px}
+.rea-vertical-stairs:before{content:"";position:absolute;top:23px;bottom:22px;left:25px;width:3px;background:linear-gradient(#13b78c,#f6aa45,#b3bfe0);border-radius:6px}
+.rea-stair-item{display:grid;grid-template-columns:40px minmax(0,1fr);align-items:center;gap:11px;position:relative}
+.rea-stair-rank{display:grid;place-items:center;width:38px;height:38px;border-radius:50%;border:3px solid white;background:#e7eefd;color:#627392;font-size:14px;font-weight:850;z-index:1;box-shadow:0 3px 10px #243b6c19}
+.rea-stair-card{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:5px 10px;border-radius:13px;padding:15px 17px;border:1px solid #dde4f5;background:#f6f8ff;min-width:0}
+.rea-stair-card .rea-stair-person{font-size:12px;font-weight:700;color:#5a6a85}
+.rea-stair-card strong{font-size:20px;line-height:1.1;color:#233250;white-space:nowrap}
+.rea-stair-card .rea-stair-caption{grid-column:1/-1;font-size:11px;color:#74839e;line-height:1.5}
+.rea-stair-item.is-winning .rea-stair-rank{background:#08b98a;color:white}
+.rea-stair-item.is-winning .rea-stair-card{background:linear-gradient(120deg,#d9ffef,#f6fffa);border:2px solid #3dccaa;box-shadow:0 8px 22px #0aba8a22}
+.rea-stair-item.is-pricing .rea-stair-rank{background:#f5aa3f;color:white}
+.rea-stair-item.is-pricing .rea-stair-card{background:linear-gradient(120deg,#fff1d3,#fffaf1);border:2px solid #fac26b}
+.rea-stair-item.is-other .rea-stair-card{margin-left:14px}
+.rea-design .rea-intro{background:linear-gradient(115deg,#253681,#4d55e2 59%,#a050e9);box-shadow:0 22px 48px #4e5be128}
+.rea-design .rea-logo{background:linear-gradient(135deg,#5967e9,#9b59df)}
+.rea-design .rea-step-number{background:linear-gradient(135deg,#ece9ff,#daf4ff);color:#6451d4}
+.rea-design .rea-role button.selected{color:#6448d7;box-shadow:0 3px 11px #6655d030}
+.rea-design .rea-demo-buttons button:first-child{background:linear-gradient(105deg,#5c63e9,#9c54df);box-shadow:0 5px 15px #7259d02b}
+.rea-design .rea-result-price{background:linear-gradient(130deg,#e4eeff,#f0e4ff)}
+.rea-design .rea-result-price strong{color:#6546cf}
+.rea-design .rea-result-winner{border-color:#afeed5;background:#f2fffa}
+@media(max-width:610px){.rea-stair-card{padding:12px}.rea-stair-card strong{font-size:17px}.rea-stair-item.is-other .rea-stair-card{margin-left:0}}
