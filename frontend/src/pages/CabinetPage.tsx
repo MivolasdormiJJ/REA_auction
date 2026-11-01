@@ -1,4 +1,5 @@
-import { Badge, Col, Empty, Pagination, Row, Space, Spin, Tabs, Typography } from 'antd';
+import { Badge, Button, Col, Empty, Pagination, Row, Space, Spin, Tabs, Typography } from 'antd';
+import { PlusOutlined } from '@ant-design/icons';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getAuctions } from '../api/auctions';
@@ -86,7 +87,8 @@ export function CabinetPage() {
 
   return (
     <div>
-      <Typography.Title level={3}>Мой кабинет</Typography.Title>
+      <header className="rea-page-heading"><div><div className="rea-page-kicker">МОЁ РАБОЧЕЕ ПРОСТРАНСТВО</div><h1>Мои заказы</h1><p>Черновики, заявки на проверке, активные и завершённые аукционы.</p></div><Link to="/auctions/new"><Button size="large" type="primary" icon={<PlusOutlined />}>Создать заказ</Button></Link></header>
+      <div className="rea-info-strip">Здесь отображаются только заказы, которые вы создали. Свои ставки на чужие аукционы можно увидеть в карточках этих аукционов; общего списка ставок текущий API пока не предоставляет.</div>
       <Row gutter={24}>
         <Col xs={24}>
           {tabItems.length === 0 ? (
