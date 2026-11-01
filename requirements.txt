@@ -1,3 +1,8 @@
 Django>=5.2,<5.3
 djangorestframework>=3.16,<3.17
 psycopg[binary]>=3.3
+# ПРОБЛЕМА: Django runserver не подходит для общедоступного сервиса.
+# РЕШЕНИЕ: Gunicorn для production, WhiteNoise для собранного React и DATABASE_URL для PostgreSQL.
+gunicorn>=23,<24
+whitenoise>=6.9,<7
+dj-database-url>=2.3,<4
