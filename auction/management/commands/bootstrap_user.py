@@ -4,6 +4,7 @@
 Команда намеренно НЕ изменяет пароль существующего пользователя и НЕ выдаёт права модератора.
 """
 import os
+from django.core.validators import validate_email
 
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError as PasswordValidationError
@@ -19,12 +20,13 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         username = os.environ.get("BOOTSTRAP_USERNAME", "").strip()
         password = os.environ.get("BOOTSTRAP_PASSWORD", "")
-        if not username and not password:
+        email = os.environ.get("BOOTSTRAP_EMAIL", "").strip()
+        if not username and not password and not email:
             # ПРОБЛЕМА: запуск приложения не должен зависеть от bootstrap-секретов.
             # РЕШЕНИЕ: без обеих переменных команда безопасно ничего не делает.
             return
-        if not username or not password:
-            raise CommandError("Обе переменные BOOTSTRAP_USERNAME и BOOTSTRAP_PASSWORD обязательны")
+        if not username or not password or not email:
+            raise CommandError("Нужны BOOTSTRAP_USERNAME, BOOTSTRAP_EMAIL и BOOTSTRAP_PASSWORD")
         if len(password) < 12:
             raise CommandError("Пароль первого аккаунта должен содержать не менее 12 символов")
         if len(username) > User._meta.get_field("username").max_length:
@@ -33,7 +35,14 @@ class Command(BaseCommand):
             self.stdout.write("Пользователь уже существует; пароль и права не изменены.")
             return
 
-        user = User(username=username, email_verified=True)
+        try:
+            validate_email(email)
+        except PasswordValidationError as error:
+            raise CommandError("Некорректный BOOTSTRAP_EMAIL") from error
+        if User.objects.filter(email=email).exists():
+            raise CommandError("Этот email уже используется")
+        # Только вручную подготовленный администратором аккаунт считается подтверждённым.
+        user = User(username=username, email=email, email_verified=True)
         try:
             validate_password(password, user=user)
         except PasswordValidationError as error:
