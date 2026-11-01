@@ -397,6 +397,24 @@ class ConcurrentTests(Fixtures, TransactionTestCase):
         self.assertEqual(sorted(code for code, _ in results), [200, 201])
         self.assertEqual(len(set(pk for _, pk in results)), 1)
 
+    def test_bid_racing_with_close_preserves_invariants(self):
+        # ПРОБЛЕМА: ставка и завершение торгов могут одновременно работать с одним аукционом.
+        # РЕШЕНИЕ: допустим либо отказ в поздней ставке, либо корректное закрытие;
+        # никакая ставка не может быть добавлена к уже закрытому аукциону.
+        self.expire()
+
+        def attempt_bid():
+            try:
+                return self.bid()[1]
+            except APIException:
+                return False
+
+        self.parallel([attempt_bid, lambda: close_auction(self.a.pk)])
+        self.a.refresh_from_db()
+        self.assertEqual(self.a.status, "closed")
+        self.assertEqual(Bid.objects.count(), 0)
+        self.assertEqual(Event.objects.filter(auction=self.a, action="closed").count(), 1)
+
     def test_concurrent_repeat(self):
         ids = self.parallel([lambda: self.bid()[0].pk, lambda: self.bid()[0].pk])
         self.assertEqual(ids[0], ids[1])
