@@ -8,9 +8,10 @@ from django.middleware.csrf import get_token
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_protect
 from rest_framework import viewsets, permissions, status
-from rest_framework.decorators import action, api_view, permission_classes
+from rest_framework.decorators import action, api_view, permission_classes, throttle_classes
 from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.response import Response
+from rest_framework.throttling import SimpleRateThrottle
 from .models import Auction, AuctionRequest, Category, User
 from .serializers import (
     AuctionSerializer,
@@ -20,6 +21,16 @@ from .serializers import (
     DecisionInput,
 )
 from .services import eligible, transition, place_bid, Conflict, event
+
+
+class LoginRateThrottle(SimpleRateThrottle):
+    scope = "login"
+    rate = "10/min"
+
+    def get_cache_key(self, request, view):
+        # ПРОБЛЕМА: без ограничения попыток можно массово подбирать пароль.
+        # РЕШЕНИЕ: лимит попыток входа по IP. В production нужен общий Redis-кеш.
+        return self.cache_format % {"scope": self.scope, "ident": self.get_ident(request)}
 
 
 class Admitted(permissions.BasePermission):
@@ -40,6 +51,7 @@ def csrf(request):
 @api_view(["POST"])
 @permission_classes([permissions.AllowAny])
 @csrf_protect
+@throttle_classes([LoginRateThrottle])
 def signin(request):
     username, password = request.data.get("username"), request.data.get("password")
     if not isinstance(username, str) or not isinstance(password, str):
