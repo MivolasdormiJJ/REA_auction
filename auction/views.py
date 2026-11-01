@@ -1,3 +1,5 @@
+import hashlib
+import json
 from django.contrib.auth import authenticate, login, logout
 from django.shortcuts import get_object_or_404
 from django.db import transaction
@@ -9,7 +11,7 @@ from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.response import Response
-from .models import Auction, Category
+from .models import Auction, AuctionRequest, Category, User
 from .serializers import (
     AuctionSerializer,
     BidInput,
@@ -105,10 +107,33 @@ class AuctionViewSet(viewsets.ModelViewSet):
                 )
         return qs
 
-    def perform_create(self, serializer):
+    def create(self, request, *args, **kwargs):
+        key = request.headers.get("Idempotency-Key", "")
+        if not key.strip() or len(key) > 80:
+            raise ValidationError({"Idempotency-Key": "Укажите ключ длиной до 80 символов"})
+        fingerprint = hashlib.sha256(
+            json.dumps(request.data, sort_keys=True, ensure_ascii=False,
+                       separators=(",", ":"), default=str).encode("utf-8")
+        ).hexdigest()
+        # ПРОБЛЕМА: два параллельных POST с одним ключом могли создать два заказа.
+        # РЕШЕНИЕ: блокируем строку заказчика и сохраняем заказ и ключ в одной транзакции.
+        # Уникальное ограничение в БД защищает от нарушения инварианта.
         with transaction.atomic():
-            a = serializer.save(owner=self.request.user)
-            event(a, self.request.user, "created")
+            User.objects.select_for_update().get(pk=request.user.pk)
+            prior = AuctionRequest.objects.filter(owner=request.user, idempotency_key=key).first()
+            if prior:
+                if prior.payload_hash != fingerprint:
+                    raise Conflict("Ключ уже использован для другого заказа")
+                return Response(self.get_serializer(prior.auction).data, status=200)
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            auction = serializer.save(owner=request.user)
+            event(auction, request.user, "created")
+            AuctionRequest.objects.create(
+                owner=request.user, idempotency_key=key,
+                payload_hash=fingerprint, auction=auction,
+            )
+            return Response(self.get_serializer(auction).data, status=201)
 
     def partial_update(self, request, *args, **kwargs):
         # Блокировка та же, что при публикации: нельзя изменить условия
