@@ -79,11 +79,22 @@ export function DesignPreviewPage() {
               <div className="rea-ladder-card">
                 <div className="rea-budget"><div><small>МАКСИМАЛЬНЫЙ БЮДЖЕТ ЗАКАЗЧИКА</small><strong>10 000 ₽</strong></div><span className="rea-budget-icon">₽</span></div>
                 <div className="rea-card-top"><strong>Условная лестница предложений</strong><span>{bids.length} ставки</span></div>
-                <div className="rea-ladder-bars">{ordered.map((bid,index) => <div className="rea-ladder-row" key={bid.name}>
-                  <div className="rea-ladder-row-head"><span><i className={'rea-color '+bid.color}/>{bid.name}</span><strong>{rub(bid.amount)}</strong></div>
-                  <div className="rea-progress-track"><div className={'rea-progress '+bid.color} style={{width:`${bid.amount / BASE_BUDGET * 100}%`}} /></div>
-                  <div className="rea-row-caption">{index === 0 ? 'Самая низкая ставка — первое место' : index === 1 ? 'Вторая по величине — определяет итоговую цену' : 'Другое предложение'}</div>
-                </div>)}</div>
+                {/* ПРОБЛЕМА: горизонтальные шкалы выглядели как статистика, а не лестница.
+                    РЕШЕНИЕ: настоящие ступени идут сверху вниз по возрастанию цены;
+                    первая и вторая выделены цветом, чтобы правило второй цены было очевидно. */}
+                <div className="rea-stair-guide">Чем <strong>ниже цена</strong>, тем выше место в рейтинге.</div>
+                <div className="rea-vertical-stairs" aria-label="Учебная лестница ставок от самой низкой к высокой">
+                  {ordered.map((bid, index) => (
+                    <div className={`rea-stair-item ${index === 0 ? 'is-winning' : index === 1 ? 'is-pricing' : 'is-other'}`} key={bid.name}>
+                      <span className="rea-stair-rank">{index + 1}</span>
+                      <div className={`rea-stair-card ${bid.color}`}>
+                        <span className="rea-stair-person">{bid.name}</span>
+                        <strong>{rub(bid.amount)}</strong>
+                        <span className="rea-stair-caption">{index === 0 ? 'Победитель — минимальная ставка' : index === 1 ? 'Вторая ставка — итоговая цена' : 'Другое предложение'}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
                 <div className="rea-privacy"><LockOutlined /><span><strong>Важно:</strong> эта лестница — только учебный пример. В реальном аукционе чужие ставки и места участников не показываются до завершения. API также не раскрывает чужие индивидуальные ставки после закрытия.</span></div>
                 <div className="rea-demo-buttons"><button type="button" onClick={addBid} disabled={closed || bids.some(b => b.name === 'Вы (пример)')}>Добавить мою ставку 6 500 ₽</button><button type="button" onClick={() => setClosed(true)} disabled={closed}>Завершить пример</button><button type="button" className="rea-reset" onClick={reset}>Сначала</button></div>
               </div>
