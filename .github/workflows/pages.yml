@@ -39,9 +39,13 @@ jobs:
         working-directory: frontend
         env:
           # ПРОБЛЕМА: статический хостинг не поддерживает backend /api.
-          # РЕШЕНИЕ: публикуем только учебный маршрут и корректный Vite base.
+          # РЕШЕНИЕ: публикуем React UI и учебный маршрут, но для входа и ставок нужен отдельный Django-хостинг.
           GITHUB_PAGES: 'true'
-        run: npm run build
+        run: |
+          npm run build
+          # ПРОБЛЕМА: GitHub Pages выдаёт 404 при открытии /login или /auctions напрямую.
+          # РЕШЕНИЕ: копируем SPA shell в 404.html, React Router восстановит маршрут.
+          cp dist/index.html dist/404.html
       - name: Configure Pages
         uses: actions/configure-pages@v5
         with:
