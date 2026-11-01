@@ -84,7 +84,7 @@ def register(request):
             url = request.build_absolute_uri("/verify-email?" + urlencode({"uid": uid, "token": token}))
             send_mail(
                 "REA Auction — подтверждение email",
-                "Здравствуйте! Подтвердите регистрацию, открыв ссылку:\\n" + url + "\\n\\nЕсли вы не регистрировались, проигнорируйте это письмо.",
+                "Здравствуйте! Подтвердите регистрацию, открыв ссылку:\n" + url + "\n\nЕсли вы не регистрировались, проигнорируйте это письмо.",
                 settings.DEFAULT_FROM_EMAIL,
                 [user.email],
                 fail_silently=False,
