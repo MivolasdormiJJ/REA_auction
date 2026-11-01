@@ -1,6 +1,8 @@
 """Маршруты API аукциона и аутентификации."""
 
-from django.urls import include, path
+from django.urls import include, path, re_path
+from django.conf import settings
+from django.http import FileResponse, Http404
 from rest_framework.routers import DefaultRouter
 
 from auction.views import (
@@ -30,3 +32,17 @@ urlpatterns += [
         include("rest_framework.urls", namespace="rest_framework"),
     ),
 ]
+
+# ПРОБЛЕМА: React Router использует /login, /profile и другие клиентские URL.
+# РЕШЕНИЕ: Django отдаёт index.html для страниц SPA, не перехватывая /api или /static.
+def frontend_app(request):
+    index = settings.FRONTEND_DIST_DIR / "index.html"
+    if not index.exists():
+        raise Http404("Frontend build is missing")
+    return FileResponse(index.open("rb"), content_type="text/html")
+
+
+if settings.FRONTEND_DIST_DIR.is_dir():
+    urlpatterns += [
+        re_path(r"^(?!api/|api-auth/|static/|assets/|favicon\\.ico).*$", frontend_app),
+    ]
