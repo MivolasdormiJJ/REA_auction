@@ -82,7 +82,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             РЕШЕНИЕ: единая оболочка с читаемой навигацией и адаптивной рабочей областью. */}
         <Content className="rea-app-content">{children}</Content>
         <footer style={{ textAlign: 'center', padding: '0 20px 24px', color: '#a2adc1', fontSize: 11 }}>
-          <Typography.Text type="secondary">REA Auction · Ставки участников остаются закрытыми</Typography.Text>
+          <Typography.Text type="secondary">REA Auction · Ставки участников открыты</Typography.Text>
         </footer>
       </Layout>
     </Layout>
