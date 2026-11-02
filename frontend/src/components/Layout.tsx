@@ -1,5 +1,5 @@
 import { Avatar, Button, Dropdown, Layout, Menu, Typography } from 'antd';
-import { AppstoreOutlined, BookOutlined, DashboardOutlined, LogoutOutlined, MenuOutlined, PlusOutlined, SafetyCertificateOutlined, CrownOutlined, UserOutlined } from '@ant-design/icons';
+import { AppstoreOutlined, BellOutlined, BookOutlined, DashboardOutlined, LogoutOutlined, MenuOutlined, PlusOutlined, SafetyCertificateOutlined, CrownOutlined, UserOutlined } from '@ant-design/icons';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { logout } from '../api/auth';
@@ -12,7 +12,8 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
   const navigate = useNavigate();
   const pathname = location.pathname;
-  const selectedKey = pathname.startsWith('/profile') ? 'profile'
+  const selectedKey = pathname.startsWith('/notifications') ? 'notifications'
+    : pathname.startsWith('/profile') ? 'profile'
     : pathname.startsWith('/cabinet') ? 'cabinet'
     : pathname.startsWith('/admin') ? 'admin'
     : pathname.startsWith('/moderation') ? 'moderation'
@@ -34,6 +35,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
     { key: 'catalog', icon: <AppstoreOutlined />, label: <Link to="/auctions">Каталог аукционов</Link> },
     { key: 'cabinet', icon: <DashboardOutlined />, label: <Link to="/cabinet">Мои заказы</Link> },
     { key: 'profile', icon: <UserOutlined />, label: <Link to="/profile">Мой профиль</Link> },
+    { key: 'notifications', icon: <BellOutlined />, label: <Link to="/notifications">Уведомления</Link> },
     ...(user?.is_admin ? [{ key: 'admin', icon: <CrownOutlined />, label: <Link to="/admin">Администратор</Link> }] : []),
     ...(user?.can_moderate ? [{ key: 'moderation', icon: <SafetyCertificateOutlined />, label: <Link to="/moderation">Модерация</Link> }] : []),
   ];
@@ -41,7 +43,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <Layout className="rea-app">
       <Sider width={248} theme="light" className="rea-app-sidebar" style={{ display: 'flex', flexDirection: 'column' }}>
-        <div className="rea-app-brand"><span className="rea-app-mark">✦</span><span>rea.<small>AUCTION PLATFORM</small></span></div>
+        <Link to="/auctions" className="rea-app-brand rea-app-brand-logo" aria-label="РЭУ — REA Auction"><img src={`${import.meta.env.BASE_URL}rea-logo.svg`} alt="120 лет РЭУ им. Г. В. Плеханова" /></Link>
         <div className="rea-app-section-label">РАБОЧЕЕ ПРОСТРАНСТВО</div>
         <nav className="rea-app-nav" aria-label="Основная навигация">
           <Menu mode="inline" selectedKeys={[selectedKey]} items={items} />
@@ -62,7 +64,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       </Sider>
       <Layout style={{ background: 'transparent', minWidth: 0 }}>
         <header className="rea-app-topbar">
-          <span className="rea-app-breadcrumb">Рабочее пространство / <strong>{selectedKey === 'profile' ? 'Профиль' : selectedKey === 'cabinet' ? 'Мои заказы' : selectedKey === 'moderation' ? 'Модерация' : selectedKey === 'admin' ? 'Администратор' : 'Аукционы'}</strong></span>
+          <span className="rea-app-breadcrumb">Рабочее пространство / <strong>{selectedKey === 'notifications' ? 'Уведомления' : selectedKey === 'profile' ? 'Профиль' : selectedKey === 'cabinet' ? 'Мои заказы' : selectedKey === 'moderation' ? 'Модерация' : selectedKey === 'admin' ? 'Администратор' : 'Аукционы'}</strong></span>
           <div className="rea-app-top-actions">
             {/* ПРОБЛЕМА: на телефоне сайдбар скрыт, и профиль/кабинет были недоступны.
                 РЕШЕНИЕ: мобильное выпадающее меню с теми же маршрутами. */}
@@ -70,12 +72,14 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
               { key: 'catalog', label: <Link to="/auctions">Каталог аукционов</Link> },
               { key: 'cabinet', label: <Link to="/cabinet">Мои заказы</Link> },
               { key: 'profile', label: <Link to="/profile">Мой профиль</Link> },
+              { key: 'notifications', label: <Link to="/notifications">Уведомления</Link> },
               { key: 'guide', label: <Link to="/design-preview">Как работают торги</Link> },
               ...(user?.is_admin ? [{ key: 'admin', label: <Link to="/admin">Администратор</Link> }] : []),
               ...(user?.can_moderate ? [{ key: 'moderation', label: <Link to="/moderation">Модерация</Link> }] : []),
             ] }}>
               <Button className="rea-mobile-menu" icon={<MenuOutlined />}>Меню</Button>
             </Dropdown>
+            <Button icon={<BellOutlined />} onClick={() => navigate('/notifications')}>Уведомления</Button>
             <Button icon={<BookOutlined />} onClick={() => navigate('/design-preview')}>Правила</Button>
             <Button type="primary" icon={<PlusOutlined />} onClick={() => navigate('/auctions/new')}>Новая задача</Button>
             <Button icon={<LogoutOutlined />} onClick={handleLogout}>Выйти</Button>
