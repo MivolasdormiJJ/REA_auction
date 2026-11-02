@@ -36,6 +36,8 @@ if public_domain:
     CSRF_TRUSTED_ORIGINS.append("https://" + public_domain)
 
 INSTALLED_APPS = [
+    "django.contrib.admin",
+    "django.contrib.messages",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.staticfiles",
@@ -51,6 +53,7 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "django.contrib.messages.middleware.MessageMiddleware",
 ]
 
 ROOT_URLCONF = "config.urls"
@@ -128,6 +131,7 @@ TEMPLATES = [
             "context_processors": [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
+                "django.contrib.messages.context_processors.messages",
             ],
         },
     },
