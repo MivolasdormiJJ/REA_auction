@@ -29,7 +29,7 @@ export function ProfilePage() {
               <Descriptions.Item label="ID участника">#{user.id}</Descriptions.Item>
               <Descriptions.Item label="Статус"><Tag color="success" icon={<CheckCircleOutlined />}>Аккаунт активен</Tag></Descriptions.Item>
               <Descriptions.Item label="Права">{user.can_moderate ? <Tag color="geekblue">Модератор</Tag> : 'Участник торгов'}</Descriptions.Item>
-              <Descriptions.Item label="Безопасность"><Space><LockOutlined /> Ставки других участников скрыты</Space></Descriptions.Item>
+              <Descriptions.Item label="Безопасность"><Space><LockOutlined /> Ставки участников открыты</Space></Descriptions.Item>
             </Descriptions>
           </Card>
           <div className="rea-info-strip" style={{ marginTop: 18 }}>
@@ -47,7 +47,7 @@ export function ProfilePage() {
           </Card>
           <Card style={{ marginTop: 20 }} title="Что важно знать">
             <Typography.Paragraph type="secondary">
-              Исполнитель может отправить одну неизменяемую закрытую ставку на аукцион.
+              Исполнитель может отправить одну неизменяемую открытую ставку на аукцион.
               Побеждает минимальная ставка, а итоговая цена при двух и более ставках равна второй минимальной.
             </Typography.Paragraph>
           </Card>
