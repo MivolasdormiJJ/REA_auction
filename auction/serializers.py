@@ -57,9 +57,19 @@ class BidInput(serializers.Serializer):
 
 
 class BidSerializer(serializers.ModelSerializer):
+    bidder_id = serializers.IntegerField(read_only=True)
+    bidder_username = serializers.CharField(source="bidder.username", read_only=True)
+
     class Meta:
         model = Bid
-        fields = ["id", "auction_id", "amount_kopecks", "created_at"]
+        fields = ["id", "auction_id", "bidder_id", "bidder_username", "amount_kopecks", "created_at"]
+
+
+class AdminUserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ["id", "username", "email", "email_verified", "is_active", "is_staff", "is_superuser", "date_joined"]
+        read_only_fields = fields
 
 
 class CategorySerializer(serializers.ModelSerializer):
