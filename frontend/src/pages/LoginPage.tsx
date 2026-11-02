@@ -1,3 +1,4 @@
+import { BrandLogo } from '../components/BrandLogo';
 import { Alert, Button, Form, Input, Typography } from 'antd';
 import { ArrowRightOutlined, LockOutlined, SafetyCertificateOutlined, UserOutlined } from '@ant-design/icons';
 import { Link, useNavigate } from 'react-router-dom';
@@ -32,7 +33,7 @@ export function LoginPage() {
   return (
     <main className="rea-login-shell">
       <section className="rea-login-aside">
-        <Link to="/design-preview" style={{ fontSize: 32, fontWeight: 850, color: "white" }}>✦ rea.</Link>
+        <BrandLogo />
         <div>
           <div className="rea-login-pill">✦ REA AUCTION PLATFORM</div>
           <h1 style={{ marginTop: 25 }}>Делаем сложные торги простыми.</h1>
