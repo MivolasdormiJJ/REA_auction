@@ -193,15 +193,28 @@ class AuctionTests(Fixtures, TestCase):
     def test_anonymous_denied(self):
         self.assertEqual(self.client.get("/api/auctions/").status_code, 403)
 
-    def test_bid_privacy_including_owner(self):
+    def test_bids_visible_to_all_authenticated_participants(self):
         self.bid()
         for user in [self.v, self.owner]:
             self.client.force_authenticate(user)
             response = self.client.get(f"/api/auctions/{self.a.pk}/bids/")
-            self.assertEqual(response.data, [])
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(len(response.data), 1)
+            self.assertEqual(response.data[0]["bidder_username"], self.u.username)
+            self.assertEqual(response.data[0]["amount_kopecks"], 70000)
             detail = self.client.get(f"/api/auctions/{self.a.pk}/").data
-            self.assertNotIn("bids", detail)
             self.assertIsNone(detail["payment_kopecks"])
+
+    def test_owner_cannot_bid_through_http(self):
+        self.client.force_authenticate(self.owner)
+        response = self.client.post(
+            f"/api/auctions/{self.a.pk}/bids/",
+            {"amount_kopecks": 50000},
+            format="json",
+            HTTP_IDEMPOTENCY_KEY="owner-test",
+        )
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(Bid.objects.count(), 0)
 
     def test_bid_api_validation(self):
         self.client.force_authenticate(self.u)
