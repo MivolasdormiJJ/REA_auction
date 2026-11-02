@@ -1,5 +1,5 @@
 import { Avatar, Button, Dropdown, Layout, Menu, Typography } from 'antd';
-import { AppstoreOutlined, BookOutlined, DashboardOutlined, LogoutOutlined, MenuOutlined, PlusOutlined, SafetyCertificateOutlined, UserOutlined } from '@ant-design/icons';
+import { AppstoreOutlined, BookOutlined, DashboardOutlined, LogoutOutlined, MenuOutlined, PlusOutlined, SafetyCertificateOutlined, CrownOutlined, UserOutlined } from '@ant-design/icons';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { logout } from '../api/auth';
@@ -14,6 +14,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = location.pathname;
   const selectedKey = pathname.startsWith('/profile') ? 'profile'
     : pathname.startsWith('/cabinet') ? 'cabinet'
+    : pathname.startsWith('/admin') ? 'admin'
     : pathname.startsWith('/moderation') ? 'moderation'
     : 'catalog';
 
@@ -33,6 +34,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
     { key: 'catalog', icon: <AppstoreOutlined />, label: <Link to="/auctions">Каталог аукционов</Link> },
     { key: 'cabinet', icon: <DashboardOutlined />, label: <Link to="/cabinet">Мои заказы</Link> },
     { key: 'profile', icon: <UserOutlined />, label: <Link to="/profile">Мой профиль</Link> },
+    ...(user?.is_admin ? [{ key: 'admin', icon: <CrownOutlined />, label: <Link to="/admin">Администратор</Link> }] : []),
     ...(user?.can_moderate ? [{ key: 'moderation', icon: <SafetyCertificateOutlined />, label: <Link to="/moderation">Модерация</Link> }] : []),
   ];
 
@@ -55,12 +57,12 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         </div>
         <div className="rea-app-user">
           <Avatar className="rea-app-avatar">{user?.username.slice(0, 2).toUpperCase()}</Avatar>
-          <div><div className="rea-app-user-name">{user?.username}</div><div className="rea-app-user-role">{user?.can_moderate ? 'Модератор' : 'Участник'}</div></div>
+          <div><div className="rea-app-user-name">{user?.username}</div><div className="rea-app-user-role">{user?.is_admin ? 'Администратор' : user?.can_moderate ? 'Модератор' : 'Участник'}</div></div>
         </div>
       </Sider>
       <Layout style={{ background: 'transparent', minWidth: 0 }}>
         <header className="rea-app-topbar">
-          <span className="rea-app-breadcrumb">Рабочее пространство / <strong>{selectedKey === 'profile' ? 'Профиль' : selectedKey === 'cabinet' ? 'Мои заказы' : selectedKey === 'moderation' ? 'Модерация' : 'Аукционы'}</strong></span>
+          <span className="rea-app-breadcrumb">Рабочее пространство / <strong>{selectedKey === 'profile' ? 'Профиль' : selectedKey === 'cabinet' ? 'Мои заказы' : selectedKey === 'moderation' ? 'Модерация' : selectedKey === 'admin' ? 'Администратор' : 'Аукционы'}</strong></span>
           <div className="rea-app-top-actions">
             {/* ПРОБЛЕМА: на телефоне сайдбар скрыт, и профиль/кабинет были недоступны.
                 РЕШЕНИЕ: мобильное выпадающее меню с теми же маршрутами. */}
@@ -69,6 +71,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
               { key: 'cabinet', label: <Link to="/cabinet">Мои заказы</Link> },
               { key: 'profile', label: <Link to="/profile">Мой профиль</Link> },
               { key: 'guide', label: <Link to="/design-preview">Как работают торги</Link> },
+              ...(user?.is_admin ? [{ key: 'admin', label: <Link to="/admin">Администратор</Link> }] : []),
               ...(user?.can_moderate ? [{ key: 'moderation', label: <Link to="/moderation">Модерация</Link> }] : []),
             ] }}>
               <Button className="rea-mobile-menu" icon={<MenuOutlined />}>Меню</Button>
