@@ -10,6 +10,7 @@ import { LoginPage } from './pages/LoginPage';
 import { ModerationPage } from './pages/ModerationPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { AdminPage } from './pages/AdminPage';
+import { NotificationsPage } from './pages/NotificationsPage';
 import { RegisterPage } from './pages/RegisterPage';
 import { VerifyEmailPage } from './pages/VerifyEmailPage';
 import { DesignPreviewPage } from './pages/DesignPreviewPage';
@@ -55,6 +56,7 @@ function AppRoutes() {
                 <Route path="/cabinet" element={<CabinetPage />} />
                 {/* ПРОБЛЕМА: в API нет редактирования аккаунта. РЕШЕНИЕ: отдельный профиль только с достоверными данными /auth/me/. */}
                 <Route path="/profile" element={<ProfilePage />} />
+                <Route path="/notifications" element={<NotificationsPage />} />
                 <Route path="/admin" element={user?.is_admin ? <AdminPage /> : <Navigate to="/auctions" replace />} />
                 <Route
                   path="/moderation"
