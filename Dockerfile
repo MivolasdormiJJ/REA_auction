@@ -20,4 +20,4 @@ USER appuser
 EXPOSE 8000
 # ПРОБЛЕМА: миграции без pre-deploy hook не применятся при первом запуске.
 # РЕШЕНИЕ: мигрируем перед Gunicorn, но только после успешного подключения к PostgreSQL.
-CMD ["sh", "-c", "python manage.py migrate --noinput && python manage.py bootstrap_user && python manage.py seed_secure_demo && python manage.py seed_student_examples && (python manage.py close_auctions --loop &) && exec gunicorn config.wsgi:application --bind 0.0.0.0:${PORT:-8000} --workers 1 --timeout 60 --access-logfile - --error-logfile -"]
+CMD ["sh", "-c", "python manage.py migrate --noinput && python manage.py bootstrap_user && python manage.py bootstrap_admin && python manage.py seed_secure_demo && python manage.py seed_student_examples && (python manage.py close_auctions --loop &) && exec gunicorn config.wsgi:application --bind 0.0.0.0:${PORT:-8000} --workers 1 --timeout 60 --access-logfile - --error-logfile -"]
