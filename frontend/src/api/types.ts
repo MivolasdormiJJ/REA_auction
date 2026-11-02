@@ -10,6 +10,7 @@ export interface User {
   id: number;
   username: string;
   can_moderate: boolean;
+  is_admin?: boolean;
 }
 
 export interface Category {
