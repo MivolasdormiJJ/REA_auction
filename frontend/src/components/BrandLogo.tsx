@@ -16,7 +16,7 @@ export function BrandLogo({ variant = 'auth' }: { variant?: 'auth' | 'preview' }
       <span className={variant === 'preview' ? 'rea-logo' : 'rea-auth-brand-icon'} aria-hidden="true">
         <ThunderboltFilled />
       </span>
-      <span className="rea-brand-word">rea<span className="rea-dot">.</span>
+      <span className="rea-brand-word"><span>rea<span className="rea-dot">.</span></span>
         <small>AUCTION PLATFORM</small>
       </span>
     </Link>
