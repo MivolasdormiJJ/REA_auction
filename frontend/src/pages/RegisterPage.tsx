@@ -34,7 +34,7 @@ export function RegisterPage() {
   return (
     <main className="rea-login-shell">
       <section className="rea-login-aside">
-        <Link to="/design-preview" style={{ fontSize: 32, fontWeight: 850, color: 'white' }}>✦ rea.</Link>
+        <Link to="/design-preview" aria-label="РЭУ им. Г. В. Плеханова"><img className="rea-anniversary-logo" src={`${import.meta.env.BASE_URL}rea-logo.svg`} alt="120 лет РЭУ им. Г. В. Плеханова" /></Link>
         <div>
           <div className="rea-login-pill">✦ ДОБРО ПОЖАЛОВАТЬ В REA AUCTION</div>
           <h1 style={{ marginTop: 25 }}>Создайте аккаунт. Начните участвовать.</h1>
@@ -74,7 +74,7 @@ export function RegisterPage() {
               </Form>
             </>
           )}
-          <p style={{ marginTop: 22, marginBottom: 0, textAlign: 'center' }}>Уже зарегистрированы? <Link to="/login" style={{ color: '#5d68e6', fontWeight: 750 }}>Войти</Link></p>
+          <p style={{ marginTop: 22, marginBottom: 0, textAlign: 'center' }}>Уже зарегистрированы? <Link to="/login" style={{ color: '#d46d20', fontWeight: 750 }}>Войти</Link></p>
         </div>
       </section>
     </main>
