@@ -1,3 +1,4 @@
+import { BrandLogo } from '../components/BrandLogo';
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
@@ -38,7 +39,7 @@ export function DesignPreviewPage() {
   return <div className="rea-design">
     <div className="rea-layout">
       <aside className="rea-sidebar">
-        <Link to="/design-preview" className="rea-brand"><span className="rea-logo"><ThunderboltFilled /></span><span>rea<span className="rea-dot">.</span><small>AUCTION PLATFORM</small></span></Link>
+        <BrandLogo variant="preview" />
         <div className="rea-nav-label">НАВИГАЦИЯ</div>
         <a className="rea-nav active" href="#intro">✦ &nbsp; Главная</a>
         <a className="rea-nav" href="#how">◫ &nbsp; Как это работает</a>
