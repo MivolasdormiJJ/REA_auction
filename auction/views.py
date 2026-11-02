@@ -169,7 +169,7 @@ class AuctionViewSet(viewsets.ModelViewSet):
         visible = Q(owner=u) | Q(status__in=["open", "closed"])
         if u.has_perm("auction.moderate_auction"):
             visible |= Q(status="review")
-        qs = Auction.objects.filter(visible).order_by("-id")
+        qs = (Auction.objects.all() if u.is_superuser else Auction.objects.filter(visible)).order_by("-id")
         if self.action == "list":
             for param in ["status", "category"]:
                 value = self.request.query_params.get(param)
