@@ -36,10 +36,10 @@ export function LoginPage() {
         <div>
           <div className="rea-login-pill">✦ REA AUCTION PLATFORM</div>
           <h1 style={{ marginTop: 25 }}>Делаем сложные торги простыми.</h1>
-          <p>Публикуйте задачи, находите исполнителей и участвуйте в прозрачных обратных аукционах с закрытыми предложениями.</p>
+          <p>Публикуйте задачи, находите исполнителей и участвуйте в прозрачных обратных аукционах с открытыми предложениями.</p>
           <div style={{ display: 'flex', gap: 16, alignItems: 'center', flexWrap: 'wrap', color: '#e3e8ff', fontSize: 12, marginTop: 25 }}>
             <span><SafetyCertificateOutlined /> Прозрачные правила</span>
-            <span><LockOutlined /> Закрытые ставки</span>
+            <span><LockOutlined /> Открытые ставки</span>
           </div>
         </div>
         <Link style={{ color: '#e8eeff', fontSize: 13 }} to="/design-preview">Узнать, как работают торги <ArrowRightOutlined /></Link>
