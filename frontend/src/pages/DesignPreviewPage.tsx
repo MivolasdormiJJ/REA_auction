@@ -38,7 +38,7 @@ export function DesignPreviewPage() {
   return <div className="rea-design">
     <div className="rea-layout">
       <aside className="rea-sidebar">
-        <Link to="/design-preview" className="rea-brand rea-anniversary-brand"><img src={`${import.meta.env.BASE_URL}rea-logo.svg`} alt="120 лет РЭУ им. Г. В. Плеханова" /></Link>
+        <Link to="/design-preview" className="rea-brand"><span className="rea-logo"><ThunderboltFilled /></span><span>rea<span className="rea-dot">.</span><small>AUCTION PLATFORM</small></span></Link>
         <div className="rea-nav-label">НАВИГАЦИЯ</div>
         <a className="rea-nav active" href="#intro">✦ &nbsp; Главная</a>
         <a className="rea-nav" href="#how">◫ &nbsp; Как это работает</a>
