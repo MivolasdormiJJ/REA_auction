@@ -32,9 +32,7 @@ export function ProfilePage() {
               <Descriptions.Item label="Безопасность"><Space><LockOutlined /> Ставки участников открыты</Space></Descriptions.Item>
             </Descriptions>
           </Card>
-          <div className="rea-info-strip" style={{ marginTop: 18 }}>
-            <LockOutlined /> Изменение личных данных и пароля пока не поддерживается существующим API. Мы не показываем кнопки, которые ничего не сохраняют.
-          </div>
+
         </Col>
         <Col xs={24} lg={9}>
           <Card title="Быстрые действия">
