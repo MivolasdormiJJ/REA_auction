@@ -43,7 +43,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <Layout className="rea-app">
       <Sider width={248} theme="light" className="rea-app-sidebar" style={{ display: 'flex', flexDirection: 'column' }}>
-        <Link to="/auctions" className="rea-app-brand rea-app-brand-logo" aria-label="РЭУ — REA Auction"><img src={`${import.meta.env.BASE_URL}rea-logo.svg`} alt="120 лет РЭУ им. Г. В. Плеханова" /></Link>
+        <div className="rea-app-brand"><span className="rea-app-mark">✦</span><span>rea.<small>AUCTION PLATFORM</small></span></div>
         <div className="rea-app-section-label">РАБОЧЕЕ ПРОСТРАНСТВО</div>
         <nav className="rea-app-nav" aria-label="Основная навигация">
           <Menu mode="inline" selectedKeys={[selectedKey]} items={items} />
