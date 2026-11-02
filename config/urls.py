@@ -4,6 +4,7 @@ from django.urls import include, path, re_path
 from django.conf import settings
 from django.http import FileResponse, Http404
 from rest_framework.routers import DefaultRouter
+from auction.admin_api import AllUsersViewSet, AllAuctionsViewSet
 
 from auction.views import (
     AuctionViewSet,
@@ -19,6 +20,8 @@ from auction.views import (
 router = DefaultRouter()
 router.register("auctions", AuctionViewSet, basename="auctions")
 router.register("categories", CategoryViewSet)
+router.register("admin/users", AllUsersViewSet, basename="admin-users")
+router.register("admin/auctions", AllAuctionsViewSet, basename="admin-auctions")
 
 urlpatterns = [
     path("api/", include(router.urls)),
