@@ -32,7 +32,7 @@ export function LoginPage() {
   return (
     <main className="rea-login-shell">
       <section className="rea-login-aside">
-        <Link to="/design-preview" aria-label="РЭУ им. Г. В. Плеханова"><img className="rea-anniversary-logo" src={`${import.meta.env.BASE_URL}rea-logo.svg`} alt="120 лет РЭУ им. Г. В. Плеханова" /></Link>
+        <Link to="/design-preview" style={{ fontSize: 32, fontWeight: 850, color: "white" }}>✦ rea.</Link>
         <div>
           <div className="rea-login-pill">✦ REA AUCTION PLATFORM</div>
           <h1 style={{ marginTop: 25 }}>Делаем сложные торги простыми.</h1>
