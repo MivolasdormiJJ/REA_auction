@@ -173,7 +173,7 @@ export function AuctionDetailPage() {
       </div>
       <div className="rea-info-strip">
         📊 Ставки и имена исполнителей открыты всем вошедшим участникам. Побеждает минимальная ставка, а итоговая цена при двух и более предложениях — вторая минимальная.
-        {' '}<a href={`${import.meta.env.BASE_URL}design-preview#ladder`} style={{ color: '#5565db', fontWeight: 750 }}>Посмотреть пример →</a>
+        {' '}<a href={`${import.meta.env.BASE_URL}design-preview#ladder`} style={{ color: '#d87224', fontWeight: 750 }}>Посмотреть пример →</a>
       </div>
       <Space style={{ marginBottom: 16 }}>
         <Button onClick={() => navigate(-1)}>← Назад</Button>
