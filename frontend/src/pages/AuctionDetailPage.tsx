@@ -40,6 +40,7 @@ export function AuctionDetailPage() {
 
   const [auction, setAuction] = useState<Auction | null>(null);
   const [myBid, setMyBid] = useState<Bid | null>(null);
+  const [allBids, setAllBids] = useState<Bid[]>([]);
   const [loading, setLoading] = useState(true);
   const [bidAmount, setBidAmount] = useState<number | null>(null);
   const [bidding, setBidding] = useState(false);
@@ -59,7 +60,8 @@ export function AuctionDetailPage() {
         getMyBids(auctionId).catch(() => [] as Bid[]),
       ]);
       setAuction(a);
-      setMyBid(bids[0] ?? null);
+      setAllBids(bids);
+      setMyBid(bids.find(b => b.bidder_id === user?.id) ?? null);
     } catch {
       // handled by empty state
     }
@@ -107,6 +109,7 @@ export function AuctionDetailPage() {
       const bid = await placeBid(auctionId, bidAmount, pendingBidRef.current.key);
       pendingBidRef.current = null;
       setMyBid(bid);
+      void loadAuction();
       message.success('Ставка принята');
       setBidAmount(null);
     } catch (err: unknown) {
@@ -169,7 +172,7 @@ export function AuctionDetailPage() {
         <StatusBadge status={auction.status} />
       </div>
       <div className="rea-info-strip">
-        🔒 Здесь нельзя посмотреть ставки других участников. В обратном аукционе выигрывает минимальная ставка, но итоговая сумма при двух и более предложениях равна второй минимальной.
+        📊 Ставки и имена исполнителей открыты всем вошедшим участникам. Побеждает минимальная ставка, а итоговая цена при двух и более предложениях — вторая минимальная.
         {' '}<a href={`${import.meta.env.BASE_URL}design-preview#ladder`} style={{ color: '#5565db', fontWeight: 750 }}>Посмотреть пример →</a>
       </div>
       <Space style={{ marginBottom: 16 }}>
@@ -236,6 +239,17 @@ export function AuctionDetailPage() {
         </Col>
 
         <Col xs={24} lg={8}>
+          <Card title={`Все ставки (${allBids.length})`} style={{ marginBottom: 16 }}>
+            {allBids.length === 0 ? <Typography.Text type="secondary">Предложений пока нет.</Typography.Text> : allBids.map((bid, index) => (
+              <div key={bid.id} style={{ display: 'flex', justifyContent: 'space-between', gap: 12, padding: '12px 0', borderBottom: '1px solid #eef1f8' }}>
+                <span>{index + 1}. {bid.bidder_username || `Участник #${bid.bidder_id}`}{bid.bidder_id === user?.id ? ' (вы)' : ''}</span>
+                <Typography.Text strong>{kopecksToRubles(bid.amount_kopecks)}</Typography.Text>
+              </div>
+            ))}
+            <Typography.Paragraph type="secondary" style={{ fontSize: 12, marginTop: 12, marginBottom: 0 }}>
+              Предложения отсортированы от минимальной цены к максимальной. Обновление каждые пять секунд.
+            </Typography.Paragraph>
+          </Card>
           {myBid && (
             <Card title="Ваша ставка" style={{ marginBottom: 16 }}>
               <Typography.Text strong style={{ fontSize: 20 }}>
@@ -249,8 +263,8 @@ export function AuctionDetailPage() {
           )}
 
           {canBid && (
-            <Card title="Сделать закрытую ставку">
-              <Alert type="info" showIcon style={{ marginBottom: 16 }} message="Ставку можно отправить только один раз" description="После отправки изменить сумму нельзя. Другие участники её не увидят. Укажите цену, за которую готовы выполнить задачу." />
+            <Card title="Сделать открытую ставку">
+              <Alert type="info" showIcon style={{ marginBottom: 16 }} message="Ставку можно отправить только один раз" description="После отправки изменить сумму нельзя. Остальные участники увидят ваше имя и цену." />
               <Form layout="vertical">
                 <Form.Item label="Сумма (не выше бюджета)">
                   <KopecksInput
