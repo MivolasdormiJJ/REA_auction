@@ -1,6 +1,7 @@
 """Маршруты API аукциона и аутентификации."""
 
 from django.urls import include, path, re_path
+from django.contrib import admin
 from django.conf import settings
 from django.http import FileResponse, Http404
 from rest_framework.routers import DefaultRouter
@@ -24,6 +25,7 @@ router.register("admin/users", AllUsersViewSet, basename="admin-users")
 router.register("admin/auctions", AllAuctionsViewSet, basename="admin-auctions")
 
 urlpatterns = [
+    path("django-admin/", admin.site.urls),
     path("api/", include(router.urls)),
     path("api/auth/csrf/", csrf),
     path("api/auth/login/", signin),
@@ -51,5 +53,5 @@ def frontend_app(request):
 
 if settings.FRONTEND_DIST_DIR.is_dir():
     urlpatterns += [
-        re_path(r"^(?!api/|api-auth/|static/|assets/|favicon\\.ico).*$", frontend_app),
+        re_path(r"^(?!api/|api-auth/|django-admin/|static/|assets/|favicon\\.ico).*$", frontend_app),
     ]
