@@ -71,14 +71,14 @@ export function CatalogPage() {
   return (
     <div>
       <header className="rea-page-heading">
-        <div><div className="rea-page-kicker">НАЙДИТЕ ПОДХОДЯЩУЮ ЗАДАЧУ</div><h1>Каталог аукционов<span style={{ color: '#6c65e8' }}>.</span></h1><p>Изучайте задачи, сравнивайте бюджеты и участвуйте в закрытых торгах.</p></div>
+        <div><div className="rea-page-kicker">НАЙДИТЕ ПОДХОДЯЩУЮ ЗАДАЧУ</div><h1>Каталог аукционов<span style={{ color: '#6c65e8' }}>.</span></h1><p>Изучайте задачи, сравнивайте бюджеты и участвуйте в открытых торгах.</p></div>
         <Link to="/auctions/new"><Button type="primary" size="large" icon={<PlusOutlined />}>Создать заказ</Button></Link>
       </header>
       <section className="rea-feature-band">
-        <div><h2>Ваши навыки — новые возможности ✦</h2><p>Выберите интересную задачу и предложите одну закрытую ставку. Побеждает минимальная, а итог определяется правилом второй цены.</p></div>
+        <div><h2>Ваши навыки — новые возможности ✦</h2><p>Выберите интересную задачу и предложите одну открытую ставку. Побеждает минимальная, а итог определяется правилом второй цены.</p></div>
         <Link to="/design-preview"><Button size="large">Как работают торги <ArrowRightOutlined /></Button></Link>
       </section>
-      <div className="rea-info-strip">🔒 Суммы ставок других участников скрыты. Для участия нужно войти в подтверждённый аккаунт, а изменить отправленную ставку нельзя.</div>
+      <div className="rea-info-strip">📊 Суммы и авторы ставок видны всем вошедшим участникам. Изменить отправленную ставку нельзя.</div>
       <div className="rea-filter-card">
         <Space wrap size="middle" style={{ width: '100%' }}>
           <Input.Search style={{ width: 310, maxWidth: '100%' }} size="large" allowClear prefix={<SearchOutlined />} placeholder="Поиск по названию или описанию" value={query} onChange={e => setQuery(e.target.value)} onSearch={value => setFilters(prev => ({ ...prev, search: value.trim() || undefined, page: 1 }))} />
