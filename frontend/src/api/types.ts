@@ -36,6 +36,8 @@ export interface Auction {
 export interface Bid {
   id: number;
   auction_id: number;
+  bidder_id?: number;
+  bidder_username?: string;
   amount_kopecks: number;
   created_at: string;
 }
