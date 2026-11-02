@@ -130,7 +130,7 @@ def signin(request):
     eligible(user)
     login(request, user)
     return Response(
-        {"id": user.pk, "username": user.username, "can_moderate": user.has_perm("auction.moderate_auction"), "csrfToken": get_token(request)}
+        {"id": user.pk, "username": user.username, "can_moderate": user.has_perm("auction.moderate_auction"), "is_admin": user.is_superuser, "csrfToken": get_token(request)}
     )
 
 
@@ -148,6 +148,7 @@ def me(request):
             "id": request.user.pk,
             "username": request.user.username,
             "can_moderate": request.user.has_perm("auction.moderate_auction"),
+            "is_admin": request.user.is_superuser,
         }
     )
 
