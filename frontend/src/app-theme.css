@@ -80,3 +80,10 @@ body{margin:0}#root{min-height:100vh}
 .rea-app .ant-btn-primary:hover{background:#db6918!important}
 .rea-app .ant-tag-orange{background:#fff1e4;border-color:#ffd2af;color:#aa4b0f}
 @media(max-width:850px){.rea-app-brand-logo{margin:13px}.rea-login-aside .rea-anniversary-logo{width:min(280px,100%)}}
+
+/* Единый логотип REA Auction без внешнего изображения. */
+.rea-auth-brand{display:inline-flex;gap:11px;align-items:center;color:#fff!important;text-decoration:none!important;align-self:flex-start}
+.rea-auth-brand-icon{display:grid;place-items:center;width:46px;height:46px;border-radius:13px;background:#e87b27;color:#fff;font-size:23px;box-shadow:0 7px 20px #0e355d30}
+.rea-auth-brand .rea-brand-word{display:flex;flex-direction:column;font-size:30px;font-weight:850;letter-spacing:-1px;line-height:1.06;color:#fff}
+.rea-auth-brand .rea-brand-word .rea-dot{display:inline}
+.rea-auth-brand .rea-brand-word small{font-size:9px;letter-spacing:1.4px;margin-top:6px;font-weight:700;color:#e2f0f9}
