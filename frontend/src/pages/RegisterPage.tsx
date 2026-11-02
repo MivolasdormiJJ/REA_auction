@@ -38,7 +38,7 @@ export function RegisterPage() {
         <div>
           <div className="rea-login-pill">✦ ДОБРО ПОЖАЛОВАТЬ В REA AUCTION</div>
           <h1 style={{ marginTop: 25 }}>Создайте аккаунт. Начните участвовать.</h1>
-          <p>Один аккаунт — чтобы размещать заказы и участвовать в аукционах. Ставки остаются закрытыми для других участников.</p>
+          <p>Один аккаунт — чтобы размещать заказы и участвовать в аукционах. Суммы ставок открыты для участников аукциона.</p>
         </div>
         <Link style={{ color: '#e8eeff', fontSize: 13 }} to="/design-preview">Узнать, как работают торги <ArrowRightOutlined /></Link>
       </section>
