@@ -33,6 +33,7 @@ export function AuctionFormPage() {
 
   const [form] = Form.useForm<FormValues>();
   const [categories, setCategories] = useState<Category[]>([]);
+  const [categoryError, setCategoryError] = useState(false);
   const [loading, setLoading] = useState(isEdit);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -41,7 +42,7 @@ export function AuctionFormPage() {
   const createRequestRef = useRef<{ payload: string; key: string } | null>(null);
 
   useEffect(() => {
-    getCategories().then(setCategories).catch(() => {});
+    getCategories().then(setCategories).catch(() => setCategoryError(true));
   }, []);
 
   useEffect(() => {
@@ -117,6 +118,7 @@ export function AuctionFormPage() {
         />
       )}
 
+      {categoryError && <Alert type="error" showIcon style={{ marginBottom: 16 }} message="Не удалось загрузить категории. Обновите страницу или проверьте подключение к API." />}
       <Form form={form} layout="vertical" onFinish={onFinish}>
         <Form.Item
           label="Категория"
@@ -124,7 +126,11 @@ export function AuctionFormPage() {
           rules={[{ required: true, message: 'Выберите категорию' }]}
         >
           <Select
-            placeholder="Категория"
+            placeholder={categories.length ? "Выберите направление подготовки" : "Загрузка направлений..."}
+            showSearch
+            optionFilterProp="label"
+            loading={!categoryError && categories.length === 0}
+            disabled={categoryError || categories.length === 0}
             options={categories.map((c) => ({ value: c.id, label: c.name }))}
           />
         </Form.Item>
