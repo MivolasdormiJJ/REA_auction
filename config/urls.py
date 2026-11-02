@@ -6,6 +6,7 @@ from django.conf import settings
 from django.http import FileResponse, Http404
 from rest_framework.routers import DefaultRouter
 from auction.admin_api import AllUsersViewSet, AllAuctionsViewSet
+from auction.notifications import my_notifications
 
 from auction.views import (
     AuctionViewSet,
@@ -31,6 +32,7 @@ urlpatterns = [
     path("api/auth/login/", signin),
     path("api/auth/logout/", signout),
     path("api/auth/me/", me),
+    path("api/notifications/", my_notifications),
     path("api/auth/register/", register),
     path("api/auth/verify-email/", verify_email),
 ]
