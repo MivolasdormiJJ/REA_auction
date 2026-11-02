@@ -258,9 +258,9 @@ class AuctionViewSet(viewsets.ModelViewSet):
     def bids(self, request, pk=None):
         a = self.get_object()
         if request.method == "GET":
-            # Даже заказчик и модератор получают исключительно свои ставки.
+            # В открытых торгах отображаем предложения всем участникам аукциона.
             return Response(
-                BidSerializer(a.bids.filter(bidder=request.user), many=True).data
+                BidSerializer(a.bids.select_related("bidder").order_by("amount_kopecks", "created_at", "id"), many=True).data
             )
         s = BidInput(data=request.data)
         s.is_valid(raise_exception=True)
