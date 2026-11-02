@@ -6,3 +6,4 @@ psycopg[binary]>=3.3
 gunicorn>=23,<24
 whitenoise>=6.9,<7
 dj-database-url>=2.3,<4
+cryptography>=44,<47
