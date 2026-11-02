@@ -11,7 +11,7 @@ type Role = 'owner' | 'bidder';
 type Example = { name: string; amount: number; color: string };
 const BASE_BUDGET = 10000;
 const STARTING_BIDS: Example[] = [
-  { name: 'Исполнитель А', amount: 7000, color: 'purple' },
+  { name: 'Исполнитель А', amount: 7000, color: 'orange' },
   { name: 'Исполнитель Б', amount: 8500, color: 'sky' },
   { name: 'Исполнитель В', amount: 9500, color: 'mint' },
 ];
@@ -38,7 +38,7 @@ export function DesignPreviewPage() {
   return <div className="rea-design">
     <div className="rea-layout">
       <aside className="rea-sidebar">
-        <Link to="/design-preview" className="rea-brand"><span className="rea-logo"><ThunderboltFilled /></span><span>rea<span className="rea-dot">.</span><small>AUCTION PLATFORM</small></span></Link>
+        <Link to="/design-preview" className="rea-brand rea-anniversary-brand"><img src={`${import.meta.env.BASE_URL}rea-logo.svg`} alt="120 лет РЭУ им. Г. В. Плеханова" /></Link>
         <div className="rea-nav-label">НАВИГАЦИЯ</div>
         <a className="rea-nav active" href="#intro">✦ &nbsp; Главная</a>
         <a className="rea-nav" href="#how">◫ &nbsp; Как это работает</a>
