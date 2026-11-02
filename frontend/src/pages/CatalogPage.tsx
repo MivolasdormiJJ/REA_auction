@@ -71,7 +71,7 @@ export function CatalogPage() {
   return (
     <div>
       <header className="rea-page-heading">
-        <div><div className="rea-page-kicker">НАЙДИТЕ ПОДХОДЯЩУЮ ЗАДАЧУ</div><h1>Каталог аукционов<span style={{ color: '#6c65e8' }}>.</span></h1><p>Изучайте задачи, сравнивайте бюджеты и участвуйте в открытых торгах.</p></div>
+        <div><div className="rea-page-kicker">НАЙДИТЕ ПОДХОДЯЩУЮ ЗАДАЧУ</div><h1>Каталог аукционов<span style={{ color: '#e97724' }}>.</span></h1><p>Изучайте задачи, сравнивайте бюджеты и участвуйте в открытых торгах.</p></div>
         <Link to="/auctions/new"><Button type="primary" size="large" icon={<PlusOutlined />}>Создать заказ</Button></Link>
       </header>
       <section className="rea-feature-band">
