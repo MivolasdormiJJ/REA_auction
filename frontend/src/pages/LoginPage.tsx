@@ -32,7 +32,7 @@ export function LoginPage() {
   return (
     <main className="rea-login-shell">
       <section className="rea-login-aside">
-        <Link to="/design-preview" style={{ fontSize: 32, fontWeight: 850, color: 'white' }}>✦ rea.</Link>
+        <Link to="/design-preview" aria-label="РЭУ им. Г. В. Плеханова"><img className="rea-anniversary-logo" src={`${import.meta.env.BASE_URL}rea-logo.svg`} alt="120 лет РЭУ им. Г. В. Плеханова" /></Link>
         <div>
           <div className="rea-login-pill">✦ REA AUCTION PLATFORM</div>
           <h1 style={{ marginTop: 25 }}>Делаем сложные торги простыми.</h1>
@@ -62,10 +62,10 @@ export function LoginPage() {
             </Form.Item>
           </Form>
           <Typography.Paragraph type="secondary" style={{ fontSize: 12 }}>
-            Ещё нет аккаунта? <Link to="/register" style={{ color: '#5d68e6', fontWeight: 750 }}>Зарегистрироваться</Link>
+            Ещё нет аккаунта? <Link to="/register" style={{ color: '#d46d20', fontWeight: 750 }}>Зарегистрироваться</Link>
           </Typography.Paragraph>
           <div style={{ borderTop: '1px solid #eef1f8', paddingTop: 20, marginTop: 17 }}>
-            <Link to="/design-preview" style={{ color: '#5d68e6', fontSize: 13, fontWeight: 750 }}>Сначала посмотреть демонстрацию →</Link>
+            <Link to="/design-preview" style={{ color: '#d46d20', fontSize: 13, fontWeight: 750 }}>Сначала посмотреть демонстрацию →</Link>
           </div>
         </div>
       </section>
