@@ -8,7 +8,7 @@
 
 /* ПРОБЛЕМА: горизонтальная диаграмма скрывала смысл "лестницы" и выглядела бледно.
    РЕШЕНИЕ: вертикальная последовательность ступеней с явными акцентами победителя
-   (изумрудный) и второй цены (янтарный), без раскрытия реальных ставок. */
+   (изумрудный) и второй цены (янтарный), в согласии с открытыми реальными торгами. */
 .rea-stair-guide{background:#eff4ff;border-radius:12px;padding:13px 16px;margin-bottom:20px;font-size:12px;color:#526382}
 .rea-stair-guide strong{color:#495ce0}
 .rea-vertical-stairs{display:grid;gap:10px;position:relative;padding-left:6px;margin-bottom:24px}
