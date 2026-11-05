@@ -1,32 +1,40 @@
-# React + TypeScript + Vite
+# REA Auction — клиентское приложение
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+Ветка разработки: `dev_any`. Интерфейс на **React 19, TypeScript, Vite, Ant Design**.
 
-Currently, two official plugins are available:
+## Основные команды
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
-
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```bash
+npm ci
+npm run dev
+npm run build
+npm run lint
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+Для разработки Django запускается отдельно на `http://localhost:8000`, а Vite проксирует запросы `/api` через `frontend/vite.config.ts`. В production React собирается командой `npm run build`; файлы из `dist/` раздаёт Django/WhiteNoise в общем Docker-контейнере на Render.
+
+## Страницы
+
+- `/design-preview`: публичная учебная демонстрация без создания реальных ставок;
+- `/login`, `/register`: вход и регистрация с email, **без подтверждения почты**;
+- `/auctions`, `/auctions/:id`: каталог, открытые ставки, результаты;
+- `/auctions/new`, `/cabinet`: создание задач и кабинет заказчика;
+- `/notifications`, `/profile`: результаты торгов и профиль;
+- `/moderation`, `/admin`: интерфейсы с проверкой прав на сервере.
+
+## Организация
+
+- `src/pages/` — отдельные страницы React;
+- `src/components/` — общие компоненты и логотип;
+- `src/api/` — типы и Axios-клиент для Django REST API;
+- `src/context/` — состояние сессии пользователя;
+- `src/app-theme.css` — оформление приложения;
+- `src/pages/DesignPreviewPage.css` — стили публичного макета;
+- `src/App.tsx` — маршруты и защита страниц по ролям.
+
+## Развёртывание
+
+- Реальное приложение: https://rea-auction.onrender.com
+- Учебный статический макет: https://mivolasdormijj.github.io/REA_auction/
+
+GitHub Pages обслуживает **только статическую сборку** и не поддерживает серверные Django-сессии и ставки. Деплой Render берёт код из `dev_any`. Ветку `main` не изменяем.
