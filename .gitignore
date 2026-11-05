@@ -8,6 +8,10 @@ env/
 .env.*
 !.env.example
 
+# Локальные базы данных (production использует PostgreSQL)
+*.sqlite3
+*.sqlite3-journal
+
 # Кэш Python
 __pycache__/
 *.py[cod]
