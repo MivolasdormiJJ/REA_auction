@@ -1,0 +1,61 @@
+name: Publish design preview to GitHub Pages
+
+on:
+  push:
+    branches: [dev_any]
+    paths:
+      - 'frontend/**'
+      - '.github/workflows/pages.yml'
+  workflow_dispatch:
+
+# ПРОБЛЕМА: две одновременные публикации могли перезаписывать артефакты друг друга.
+# РЕШЕНИЕ: для Pages оставляем только актуальный запуск.
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm ci
+      - name: Build public preview
+        working-directory: frontend
+        env:
+          # ПРОБЛЕМА: статический хостинг не поддерживает backend /api.
+          # РЕШЕНИЕ: публикуем React UI и учебный маршрут, но для входа и ставок нужен отдельный Django-хостинг.
+          GITHUB_PAGES: 'true'
+        run: |
+          npm run build
+          # ПРОБЛЕМА: GitHub Pages выдаёт 404 при открытии /login или /auctions напрямую.
+          # РЕШЕНИЕ: копируем SPA shell в 404.html, React Router восстановит маршрут.
+          cp dist/index.html dist/404.html
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+        with:
+          # ПРОБЛЕМА: в новом репозитории Pages может ещё не существовать.
+          # РЕШЕНИЕ: попросим GitHub создать Pages при наличии прав.
+          enablement: true
+      - name: Upload static site
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: frontend/dist
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4

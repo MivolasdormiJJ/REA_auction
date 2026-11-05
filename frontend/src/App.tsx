@@ -1,0 +1,89 @@
+import { Spin } from 'antd';
+import { Navigate, Route, BrowserRouter as Router, Routes } from 'react-router-dom';
+import { AppLayout } from './components/Layout';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import { AuctionDetailPage } from './pages/AuctionDetailPage';
+import { AuctionFormPage } from './pages/AuctionFormPage';
+import { CabinetPage } from './pages/CabinetPage';
+import { CatalogPage } from './pages/CatalogPage';
+import { LoginPage } from './pages/LoginPage';
+import { ModerationPage } from './pages/ModerationPage';
+import { ProfilePage } from './pages/ProfilePage';
+import { AdminPage } from './pages/AdminPage';
+import { NotificationsPage } from './pages/NotificationsPage';
+import { RegisterPage } from './pages/RegisterPage';
+import { VerifyEmailPage } from './pages/VerifyEmailPage';
+import { DesignPreviewPage } from './pages/DesignPreviewPage';
+
+function RequireAuth({ children }: { children: React.ReactNode }) {
+  const { user, loading } = useAuth();
+  if (loading) return <Spin style={{ display: 'block', margin: '25vh auto' }} size="large" />;
+  if (!user) return <Navigate to="/login" replace />;
+  return <>{children}</>;
+}
+
+function RequireModerator({ children }: { children: React.ReactNode }) {
+  const { user } = useAuth();
+  if (!user?.can_moderate) return <Navigate to="/auctions" replace />;
+  return <>{children}</>;
+}
+
+function AppRoutes() {
+  const { user, loading } = useAuth();
+
+  if (loading) return <Spin style={{ display: 'block', margin: '25vh auto' }} size="large" />;
+
+  return (
+    <Routes>
+      {/* ПРОБЛЕМА: макет не должен требовать входа или изменять рабочие маршруты.
+          РЕШЕНИЕ: отдельная публичная страница без вызовов API. */}
+      <Route path="/" element={<Navigate to="/design-preview" replace />} />
+      <Route path="/design-preview" element={<DesignPreviewPage />} />
+      <Route path="/login" element={user ? <Navigate to="/auctions" replace /> : <LoginPage />} />
+      <Route path="/register" element={user ? <Navigate to="/auctions" replace /> : <RegisterPage />} />
+      <Route path="/verify-email" element={<VerifyEmailPage />} />
+
+      <Route
+        path="/*"
+        element={
+          <RequireAuth>
+            <AppLayout>
+              <Routes>
+                <Route path="/auctions" element={<CatalogPage />} />
+                <Route path="/auctions/new" element={<AuctionFormPage />} />
+                <Route path="/auctions/:id" element={<AuctionDetailPage />} />
+                <Route path="/auctions/:id/edit" element={<AuctionFormPage />} />
+                <Route path="/cabinet" element={<CabinetPage />} />
+                {/* ПРОБЛЕМА: в API нет редактирования аккаунта. РЕШЕНИЕ: отдельный профиль только с достоверными данными /auth/me/. */}
+                <Route path="/profile" element={<ProfilePage />} />
+                <Route path="/notifications" element={<NotificationsPage />} />
+                <Route path="/admin" element={user?.is_admin ? <AdminPage /> : <Navigate to="/auctions" replace />} />
+                <Route
+                  path="/moderation"
+                  element={
+                    <RequireModerator>
+                      <ModerationPage />
+                    </RequireModerator>
+                  }
+                />
+                <Route path="*" element={<Navigate to="/auctions" replace />} />
+              </Routes>
+            </AppLayout>
+          </RequireAuth>
+        }
+      />
+    </Routes>
+  );
+}
+
+export default function App() {
+  return (
+    // ПРОБЛЕМА: GitHub Pages размещает приложение в /REA_auction/, а не в корне сайта.
+    // РЕШЕНИЕ: берём basename из Vite, чтобы маршруты работали локально и онлайн.
+    <Router basename={import.meta.env.BASE_URL}>
+      <AuthProvider>
+        <AppRoutes />
+      </AuthProvider>
+    </Router>
+  );
+}

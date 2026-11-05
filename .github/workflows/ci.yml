@@ -1,0 +1,58 @@
+name: Проверка backend и frontend
+
+on:
+  push:
+    branches: [dev_any]
+  workflow_dispatch:
+
+jobs:
+  django-postgres:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: auction
+          POSTGRES_USER: auction
+          POSTGRES_PASSWORD: test-password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U auction -d auction"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      POSTGRES_HOST: 127.0.0.1
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: auction
+      POSTGRES_USER: auction
+      POSTGRES_PASSWORD: test-password
+      SECRET_KEY: ci-only-test-secret-not-for-production
+      DEBUG: "0"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements.txt
+      # ПРОБЛЕМА: тесты блокировок пропускались на SQLite.
+      # РЕШЕНИЕ: запускаем Django tests на реальном PostgreSQL.
+      - run: python manage.py test auction --verbosity 2
+      - run: python manage.py makemigrations --check --dry-run
+
+  react-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      # ПРОБЛЕМА: TS-ошибки могли попасть в ветку без проверки сборки.
+      # РЕШЕНИЕ: проверяем типы и production-сборку при каждом push.
+      - run: npm ci
+        working-directory: frontend
+      - run: npm run build
+        working-directory: frontend
