@@ -2,7 +2,7 @@ name: Проверка backend и frontend
 
 on:
   push:
-    branches: [dev_any]
+    branches: [main, dev_any]
   workflow_dispatch:
 
 jobs:
