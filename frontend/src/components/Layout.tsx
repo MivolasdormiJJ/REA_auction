@@ -1,5 +1,5 @@
 import { Avatar, Button, Dropdown, Layout, Menu, Typography } from 'antd';
-import { AppstoreOutlined, BellOutlined, BookOutlined, DashboardOutlined, LogoutOutlined, MenuOutlined, PlusOutlined, SafetyCertificateOutlined, CrownOutlined, UserOutlined } from '@ant-design/icons';
+import { AppstoreOutlined, BellOutlined, BookOutlined, DashboardOutlined, CheckSquareOutlined, LogoutOutlined, MenuOutlined, PlusOutlined, SafetyCertificateOutlined, CrownOutlined, UserOutlined } from '@ant-design/icons';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { logout } from '../api/auth';
@@ -15,6 +15,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   const selectedKey = pathname.startsWith('/notifications') ? 'notifications'
     : pathname.startsWith('/profile') ? 'profile'
     : pathname.startsWith('/cabinet') ? 'cabinet'
+    : pathname.startsWith('/my-works') ? 'my-works'
     : pathname.startsWith('/admin') ? 'admin'
     : pathname.startsWith('/moderation') ? 'moderation'
     : 'catalog';
@@ -34,6 +35,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   const items = [
     { key: 'catalog', icon: <AppstoreOutlined />, label: <Link to="/auctions">Каталог аукционов</Link> },
     { key: 'cabinet', icon: <DashboardOutlined />, label: <Link to="/cabinet">Мои заказы</Link> },
+    { key: 'my-works', icon: <CheckSquareOutlined />, label: <Link to="/my-works">Мои работы</Link> },
     { key: 'profile', icon: <UserOutlined />, label: <Link to="/profile">Мой профиль</Link> },
     { key: 'notifications', icon: <BellOutlined />, label: <Link to="/notifications">Уведомления</Link> },
     ...(user?.is_admin ? [{ key: 'admin', icon: <CrownOutlined />, label: <Link to="/admin">Администратор</Link> }] : []),
@@ -64,13 +66,14 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       </Sider>
       <Layout style={{ background: 'transparent', minWidth: 0 }}>
         <header className="rea-app-topbar">
-          <span className="rea-app-breadcrumb">Рабочее пространство / <strong>{selectedKey === 'notifications' ? 'Уведомления' : selectedKey === 'profile' ? 'Профиль' : selectedKey === 'cabinet' ? 'Мои заказы' : selectedKey === 'moderation' ? 'Модерация' : selectedKey === 'admin' ? 'Администратор' : 'Аукционы'}</strong></span>
+          <span className="rea-app-breadcrumb">Рабочее пространство / <strong>{selectedKey === 'notifications' ? 'Уведомления' : selectedKey === 'profile' ? 'Профиль' : selectedKey === 'cabinet' ? 'Мои заказы' : selectedKey === 'my-works' ? 'Мои работы' : selectedKey === 'moderation' ? 'Модерация' : selectedKey === 'admin' ? 'Администратор' : 'Аукционы'}</strong></span>
           <div className="rea-app-top-actions">
             {/* ПРОБЛЕМА: на телефоне сайдбар скрыт, и профиль/кабинет были недоступны.
                 РЕШЕНИЕ: мобильное выпадающее меню с теми же маршрутами. */}
             <Dropdown menu={{ items: [
               { key: 'catalog', label: <Link to="/auctions">Каталог аукционов</Link> },
               { key: 'cabinet', label: <Link to="/cabinet">Мои заказы</Link> },
+              { key: 'my-works', label: <Link to="/my-works">Мои работы</Link> },
               { key: 'profile', label: <Link to="/profile">Мой профиль</Link> },
               { key: 'notifications', label: <Link to="/notifications">Уведомления</Link> },
               { key: 'guide', label: <Link to="/design-preview">Как работают торги</Link> },

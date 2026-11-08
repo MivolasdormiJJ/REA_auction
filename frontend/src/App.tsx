@@ -5,6 +5,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { AuctionDetailPage } from './pages/AuctionDetailPage';
 import { AuctionFormPage } from './pages/AuctionFormPage';
 import { CabinetPage } from './pages/CabinetPage';
+import { MyWorksPage } from './pages/MyWorksPage';
 import { CatalogPage } from './pages/CatalogPage';
 import { LoginPage } from './pages/LoginPage';
 import { ModerationPage } from './pages/ModerationPage';
@@ -54,6 +55,7 @@ function AppRoutes() {
                 <Route path="/auctions/:id" element={<AuctionDetailPage />} />
                 <Route path="/auctions/:id/edit" element={<AuctionFormPage />} />
                 <Route path="/cabinet" element={<CabinetPage />} />
+                <Route path="/my-works" element={<MyWorksPage />} />
                 {/* ПРОБЛЕМА: в API нет редактирования аккаунта. РЕШЕНИЕ: отдельный профиль только с достоверными данными /auth/me/. */}
                 <Route path="/profile" element={<ProfilePage />} />
                 <Route path="/notifications" element={<NotificationsPage />} />
