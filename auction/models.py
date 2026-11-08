@@ -91,3 +91,6 @@ class AuctionRequest(models.Model):
 
     class Meta:
         constraints = [models.UniqueConstraint(fields=["owner", "idempotency_key"], name="unique_auction_create_key")]
+
+# Import the completion model so Django migration autodiscovery registers it.
+from .task_completion import TaskCompletion  # noqa: E402,F401
