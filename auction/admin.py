@@ -2,7 +2,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 
-from auction.models import Auction, AuctionRequest, Bid, Category, Event, User
+from auction.models import Auction, AuctionRequest, Bid, Category, Event, User, WorkOrder, WorkSubmission
 
 
 @admin.register(User)
@@ -33,3 +33,32 @@ class BidAdmin(admin.ModelAdmin):
 admin.site.register(Category)
 admin.site.register(Event)
 admin.site.register(AuctionRequest)
+
+@admin.register(WorkOrder)
+class WorkOrderAdmin(admin.ModelAdmin):
+    list_display = ("auction", "status", "started_at", "accepted_at")
+    list_filter = ("status",)
+    search_fields = ("auction__title",)
+    readonly_fields = ("auction", "status", "started_at", "updated_at", "accepted_at")
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+
+@admin.register(WorkSubmission)
+class WorkSubmissionAdmin(admin.ModelAdmin):
+    list_display = ("order", "revision_number", "review_status", "created_at")
+    list_filter = ("review_status",)
+    readonly_fields = (
+        "order", "revision_number", "idempotency_key", "result_text",
+        "created_at", "review_status", "feedback", "reviewed_at",
+    )
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False

@@ -1,6 +1,6 @@
 # REA Auction — действующий API
 
-API обслуживается Django REST Framework по пути `/api/`. Формат обмена — JSON. Даты — ISO 8601, суммы — целое число копеек. Актуально для ветки `dev_any`.
+API обслуживается Django REST Framework по пути `/api/`. Формат обмена — JSON. Даты — ISO 8601, суммы — целое число копеек. Актуально для ветки `main`.
 
 ## Авторизация
 
@@ -83,3 +83,19 @@ Content-Type: application/json
 - `405` — неподдерживаемый метод.
 
 Тесты находятся в `auction/tests.py`, `auction/test_registration.py`, `auction/test_admin_access.py`, `auction/test_notifications.py` и `auction/test_student_catalog.py`. CI запускает `python manage.py test auction` на PostgreSQL и `npm run build` для React.
+
+## Выполнение заказа и приёмка
+
+После закрытия аукциона с победителем начинается отдельный процесс выполнения. Статус самих торгов при этом не меняется.
+
+| Метод | URL | Роль |
+|---|---|---|
+| GET | `/api/auctions/{id}/work/` | Заказчик и победитель: состояние и история версий |
+| POST | `/api/auctions/{id}/work/start/` | Победитель: начать работу |
+| POST | `/api/auctions/{id}/work/submit/` | Победитель: отправить результат |
+| POST | `/api/auctions/{id}/work/request-revision/` | Заказчик: запросить доработку |
+| POST | `/api/auctions/{id}/work/accept/` | Заказчик: принять работу |
+| POST | `/api/auctions/{id}/complete-work/` | Совместимый путь приёмки, требует отправленной работы |
+
+Статусы: `not_started → in_progress → submitted → accepted`, либо `submitted → revision_requested → submitted`.
+Результат передаётся в JSON `{"result_text":"Описание результата от 20 до 10000 символов"}` с обязательным заголовком `Idempotency-Key`. С тем же ключом и результатом повтор безопасен; изменённый текст с прежним ключом даёт 409. Запрос на доработку: `{"feedback":"Замечания длиной от 5 до 2000 символов"}`. Все версии сохраняются. При приёмке создаётся `TaskCompletion`, который увеличивает статистику выполненных работ ровно один раз. Загрузка файлов пока не реализована.

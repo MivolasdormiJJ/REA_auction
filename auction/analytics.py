@@ -50,20 +50,9 @@ def my_statistics(request):
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def confirm_task_completion(request, auction_id):
-    # The owner confirms actual delivered work; no one can silently mark their own bid complete.
-    with transaction.atomic():
-        auction = Auction.objects.select_for_update().filter(pk=auction_id).first()
-        if auction is None:
-            from django.http import Http404
-            raise Http404()
-        if not request.user.is_active or request.user.pk != auction.owner_id:
-            raise PermissionDenied("Подтвердить выполнение может только заказчик")
-        if auction.status != Auction.Status.CLOSED or auction.winner_id is None:
-            raise ValidationError({"detail": "Нужен завершённый аукцион с победителем"})
-        completion, created = TaskCompletion.objects.get_or_create(
-            auction=auction,
-            defaults={"confirmed_by": request.user},
-        )
+    """Compatibility endpoint; cannot bypass submission and customer review."""
+    from auction.work_api import accept_delivered_work
+    auction, order, completion, created = accept_delivered_work(auction_id, request.user)
     return Response({
         "auction_id": auction.pk,
         "completed": True,

@@ -8,7 +8,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from auction.models import Bid, Auction
+from auction.models import Bid, Auction, WorkOrder, WorkSubmission
 
 
 @api_view(["GET"])
@@ -50,5 +50,34 @@ def my_notifications(request):
             "payment_kopecks": a.payment_kopecks,
             "created_at": a.closed_at.isoformat() if a.closed_at else None,
         })
+    # Fulfillment updates are derived from durable work and review records.
+    orders = WorkOrder.objects.filter(
+        auction__status=Auction.Status.CLOSED
+    ).filter(Q(auction__owner=request.user) | Q(auction__winner=request.user)).select_related("auction").prefetch_related("submissions")
+    for order in orders:
+        a = order.auction
+        for submission in order.submissions.all():
+            if a.owner_id == request.user.pk:
+                items.append({
+                    "id": f"work-submission-{submission.id}-owner",
+                    "auction_id": a.id, "auction_title": a.title,
+                    "type": "work_submitted",
+                    "title": "Работа передана на приёмку",
+                    "message": f"Исполнитель отправил версию {submission.revision_number}. Проверьте результат.",
+                    "your_bid_kopecks": None, "payment_kopecks": None,
+                    "created_at": submission.created_at.isoformat(),
+                })
+            elif a.winner_id == request.user.pk and submission.reviewed_at is not None:
+                accepted = submission.review_status == WorkSubmission.Review.ACCEPTED
+                items.append({
+                    "id": f"work-review-{submission.id}-winner",
+                    "auction_id": a.id, "auction_title": a.title,
+                    "type": "work_accepted" if accepted else "work_revision",
+                    "title": "Работа принята" if accepted else "Заказчик запросил доработку",
+                    "message": "Результат принят заказчиком." if accepted else
+                        "Заказчик оставил замечания. Откройте карточку для новой версии.",
+                    "your_bid_kopecks": None, "payment_kopecks": None,
+                    "created_at": submission.reviewed_at.isoformat(),
+                })
     items.sort(key=lambda item: item["created_at"] or "", reverse=True)
     return Response({"count": len(items), "results": items})

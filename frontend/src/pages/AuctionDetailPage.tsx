@@ -26,7 +26,7 @@ import type { Auction, Bid } from '../api/types';
 import { StatusBadge } from '../components/StatusBadge';
 import { KopecksInput } from '../components/KopecksInput';
 import { useAuth } from '../context/AuthContext';
-import client from '../api/client';
+import { WorkPanel } from '../components/WorkPanel';
 
 function kopecksToRubles(k: number | null) {
   if (k == null) return '—';
@@ -42,8 +42,6 @@ export function AuctionDetailPage() {
   const [auction, setAuction] = useState<Auction | null>(null);
   const [myBid, setMyBid] = useState<Bid | null>(null);
   const [allBids, setAllBids] = useState<Bid[]>([]);
-  const [completion, setCompletion] = useState<{ completed: boolean; completed_at: string | null } | null>(null);
-  const [confirmingCompletion, setConfirmingCompletion] = useState(false);
   const [loading, setLoading] = useState(true);
   const [bidAmount, setBidAmount] = useState<number | null>(null);
   const [bidding, setBidding] = useState(false);
@@ -63,10 +61,6 @@ export function AuctionDetailPage() {
         getMyBids(auctionId).catch(() => [] as Bid[]),
       ]);
       setAuction(a);
-      if (a.status === 'closed') {
-        client.get<{ completed: boolean; completed_at: string | null }>(`/auctions/${auctionId}/completion/`)
-          .then(({ data }) => setCompletion(data)).catch(() => setCompletion(null));
-      } else setCompletion(null);
       setAllBids(bids);
       setMyBid(bids.find(b => b.bidder_id === user?.id) ?? null);
     } catch {
@@ -135,22 +129,6 @@ export function AuctionDetailPage() {
       }
     } finally {
       setBidding(false);
-    }
-  };
-
-  const confirmWork = async () => {
-    if (!auction || !window.confirm('Подтвердить, что победитель действительно выполнил задание? Отменить подтверждение будет нельзя.')) return;
-    setConfirmingCompletion(true);
-    try {
-      const { data } = await client.post<{ completed: boolean; completed_at: string }>(
-        `/auctions/${auction.id}/complete-work/`, {},
-      );
-      setCompletion(data);
-      message.success('Выполнение задания подтверждено. Статистика исполнителя обновлена.');
-    } catch {
-      message.error('Не удалось подтвердить выполнение');
-    } finally {
-      setConfirmingCompletion(false);
     }
   };
 
@@ -240,13 +218,6 @@ export function AuctionDetailPage() {
                   ID {auction.winner_id} — {kopecksToRubles(auction.payment_kopecks)}
                 </Descriptions.Item>
               )}
-              {auction.status === 'closed' && auction.winner_id != null && (
-                <Descriptions.Item label="Выполнение задания">
-                  {completion?.completed
-                    ? <Typography.Text type="success">Подтверждено заказчиком {completion.completed_at ? new Date(completion.completed_at).toLocaleString('ru-RU') : ''}</Typography.Text>
-                    : 'Ожидает подтверждения заказчиком'}
-                </Descriptions.Item>
-              )}
               {auction.closed_at && (
                 <Descriptions.Item label="Закрыт">
                   {new Date(auction.closed_at).toLocaleString('ru-RU')}
@@ -258,16 +229,6 @@ export function AuctionDetailPage() {
               {auction.description}
             </Typography.Paragraph>
 
-            {isOwner && auction.status === 'closed' && auction.winner_id != null && !completion?.completed && (
-              <div style={{ marginTop: 14 }}>
-                <Button type="primary" loading={confirmingCompletion} onClick={() => void confirmWork()}>
-                  Подтвердить выполнение задания
-                </Button>
-                <Typography.Paragraph type="secondary" style={{ fontSize: 12, marginTop: 8 }}>
-                  Нажимайте только после получения и проверки результата работы. Подтверждение увеличит счётчик выполненных заданий у победителя.
-                </Typography.Paragraph>
-              </div>
-            )}
             {serverClosed && (
               <Alert
                 type="info"
@@ -276,6 +237,9 @@ export function AuctionDetailPage() {
               />
             )}
           </Card>
+          {auction.status === 'closed' && auction.winner_id !== null &&
+            (user?.id === auction.owner_id || user?.id === auction.winner_id) &&
+            <WorkPanel auction={auction} userId={user?.id} />}
         </Col>
 
         <Col xs={24} lg={8}>

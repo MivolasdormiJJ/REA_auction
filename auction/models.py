@@ -94,3 +94,44 @@ class AuctionRequest(models.Model):
 
 # Import the completion model so Django migration autodiscovery registers it.
 from .task_completion import TaskCompletion  # noqa: E402,F401
+
+
+class WorkOrder(models.Model):
+    """Post-auction fulfillment; separate from the bidding lifecycle."""
+
+    class Status(models.TextChoices):
+        IN_PROGRESS = "in_progress", "В работе"
+        SUBMITTED = "submitted", "На приёмке"
+        REVISION_REQUESTED = "revision_requested", "На доработке"
+        ACCEPTED = "accepted", "Принято"
+
+    auction = models.OneToOneField(Auction, on_delete=models.PROTECT, related_name="work_order")
+    status = models.CharField(max_length=20, choices=Status.choices, default=Status.IN_PROGRESS)
+    started_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    accepted_at = models.DateTimeField(null=True, blank=True)
+
+
+class WorkSubmission(models.Model):
+    """Immutable delivery text with an auditable review for each iteration."""
+
+    class Review(models.TextChoices):
+        PENDING = "pending", "На проверке"
+        REVISION = "revision", "Доработать"
+        ACCEPTED = "accepted", "Принято"
+
+    order = models.ForeignKey(WorkOrder, on_delete=models.PROTECT, related_name="submissions")
+    revision_number = models.PositiveIntegerField()
+    idempotency_key = models.CharField(max_length=80)
+    result_text = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    review_status = models.CharField(max_length=10, choices=Review.choices, default=Review.PENDING)
+    feedback = models.TextField(blank=True)
+    reviewed_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ["revision_number"]
+        constraints = [
+            models.UniqueConstraint(fields=["order", "revision_number"], name="work_unique_revision"),
+            models.UniqueConstraint(fields=["order", "idempotency_key"], name="work_unique_submission_key"),
+        ]

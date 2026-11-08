@@ -69,7 +69,7 @@ class AnalyticsTests(TestCase):
     def test_only_owner_can_confirm_genuine_delivery(self):
         self.auth(self.owner)
         url = f"/api/auctions/{self.auction.pk}/complete-work/"
-        self.assertEqual(self.client.post(url, {}, format="json").status_code, 400)
+        self.assertEqual(self.client.post(url, {}, format="json").status_code, 409)
         close_auction(self.auction.pk)
 
         self.auth(self.winner)
