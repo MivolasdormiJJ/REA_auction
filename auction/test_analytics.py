@@ -75,6 +75,11 @@ class AnalyticsTests(TestCase):
         self.auth(self.winner)
         self.assertEqual(self.client.post(url, {}, format="json").status_code, 403)
 
+        self.auth(self.winner)
+        self.assertEqual(self.client.post(f"/api/auctions/{self.auction.pk}/work/start/", {}, format="json").status_code, 201)
+        self.assertEqual(self.client.post(f"/api/auctions/{self.auction.pk}/work/submit/", {
+            "result_text": "Полный подробный результат доступен для проверки заказчиком."
+        }, format="json", HTTP_IDEMPOTENCY_KEY="analytics-v1").status_code, 201)
         self.auth(self.owner)
         self.assertEqual(self.client.post(url, {}, format="json").status_code, 201)
         self.assertEqual(self.client.post(url, {}, format="json").status_code, 200)
@@ -122,6 +127,11 @@ class AnalyticsTests(TestCase):
         close_auction(self.auction.pk)
         self.auth(self.admin)
         self.assertEqual(self.client.get("/api/admin/analytics/").data["summary"]["completed_tasks"], 0)
+        self.auth(self.winner)
+        self.client.post(f"/api/auctions/{self.auction.pk}/work/start/", {}, format="json")
+        self.client.post(f"/api/auctions/{self.auction.pk}/work/submit/", {
+            "result_text": "Новая работа завершена и передана заказчику на проверку."
+        }, format="json", HTTP_IDEMPOTENCY_KEY="analytics-v2")
         self.auth(self.owner)
         self.client.post(f"/api/auctions/{self.auction.pk}/complete-work/", {}, format="json")
         self.auth(self.admin)
