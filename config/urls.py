@@ -7,6 +7,7 @@ from django.http import FileResponse, Http404
 from rest_framework.routers import DefaultRouter
 from auction.admin_api import AllUsersViewSet, AllAuctionsViewSet
 from auction.notifications import my_notifications
+from auction.analytics import my_statistics, confirm_task_completion, completion_status, admin_analytics, admin_export_csv
 
 from auction.views import (
     AuctionViewSet,
@@ -33,6 +34,11 @@ urlpatterns = [
     path("api/auth/logout/", signout),
     path("api/auth/me/", me),
     path("api/notifications/", my_notifications),
+    path("api/my/statistics/", my_statistics),
+    path("api/auctions/<int:auction_id>/complete-work/", confirm_task_completion),
+    path("api/auctions/<int:auction_id>/completion/", completion_status),
+    path("api/admin/analytics/", admin_analytics),
+    path("api/admin/reports/", admin_export_csv),
     path("api/auth/register/", register),
     path("api/auth/verify-email/", verify_email),
 ]
