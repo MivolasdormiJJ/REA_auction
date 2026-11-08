@@ -106,7 +106,7 @@ def admin_analytics(request):
     status_counts = {row["status"]: row["count"] for row in auctions.values("status").annotate(count=Count("id"))}
     category_rows = (
         auctions.values("category_id", "category__name")
-        .annotate(count=Count("id"), bids_count=Count("bids"))
+        .annotate(count=Count("id", distinct=True), bids_count=Count("bids", distinct=True))
         .order_by("-count", "category__name")[:12]
     )
     # Trend uses closed_at, which is the event time of the completed auction.
