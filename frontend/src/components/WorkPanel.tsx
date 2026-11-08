@@ -118,7 +118,7 @@ export function WorkPanel({ auction, userId }: { auction: Auction; userId: numbe
         {owner && work.status === 'submitted' && <>
           <Alert type="info" showIcon message="Исполнитель отправил работу. Проверьте результат перед решением." style={{ marginBottom: 12 }} />
           <Button type="primary" loading={pending} onClick={() => void perform('accept')}>Принять работу</Button>
-          <Divider orientation="left">Запросить доработку</Divider>
+          <Divider>Запросить доработку</Divider>
           <Input.TextArea value={feedback} onChange={event => setFeedback(event.target.value)}
             placeholder="Что необходимо исправить? (от 5 символов)"
             maxLength={2000} showCount autoSize={{ minRows: 2, maxRows: 5 }} />
@@ -131,7 +131,7 @@ export function WorkPanel({ auction, userId }: { auction: Auction; userId: numbe
         {work.status === 'revision_requested' && owner && <Alert type="warning" showIcon message="Запрос на доработку отправлен исполнителю." />}
         {work.status === 'accepted' && <Alert type="success" showIcon message="Работа принята заказчиком" description={work.accepted_at ? `Дата приёмки: ${new Date(work.accepted_at).toLocaleString('ru-RU')}` : undefined} />}
         {work.submissions.length > 0 && <>
-          <Divider orientation="left">История версий и решений</Divider>
+          <Divider>История версий и решений</Divider>
           <Timeline items={work.submissions.map(item => ({
             color: item.review_status === 'accepted' ? 'green' : item.review_status === 'revision' ? 'orange' : 'blue',
             children: <div>
