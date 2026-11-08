@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import client from '../api/client';
 import type { Auction, PaginatedResponse } from '../api/types';
 import { StatusBadge } from '../components/StatusBadge';
+import { AdminAnalytics } from '../components/AdminAnalytics';
 
 type AdminUser = {
   id: number; username: string; email: string; email_verified: boolean;
@@ -56,7 +57,8 @@ export function AdminPage() {
     <Card>
       <Space direction="vertical" style={{ width: '100%' }}>
         <Input.Search allowClear placeholder="Поиск на текущей странице" onChange={e => setSearch(e.target.value)} style={{ maxWidth: 360 }} />
-        <Tabs items={[
+        <Tabs defaultActiveKey="analytics" items={[
+          { key: 'analytics', label: 'Аналитика и отчёты', children: <AdminAnalytics /> },
           { key: 'users', label: `Пользователи (${userTotal})`, children: loadingUsers ? <Spin /> : <Table
             rowKey="id" size="middle" scroll={{ x: 700 }} dataSource={filteredUsers}
             columns={[
