@@ -3,12 +3,11 @@
 No separate read/unread persistence is claimed: each closed auction with a bid
 produces one durable result for the bidding account.
 """
-from django.db.models import Q
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from auction.models import Bid, Auction
+from auction.models import Auction, Bid
 
 
 @api_view(["GET"])

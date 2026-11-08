@@ -39,5 +39,8 @@ npm run build
 - [Архитектура фронтенда](docs/frontend.md)
 - [Регистрация](docs/registration.md)
 - [Демонстрация работы аукциона](docs/design-preview.md)
+- [Руководство по стилю команды](docs/STYLE_GUIDE.md)
+- [Отчёт code review](docs/CODE_REVIEW.md)
+- [Журнал изменений](CHANGELOG.md)
 
 Система предназначена для учебной демонстрации. Настоящие платежи, подтверждение email и восстановление пароля пока не реализованы.

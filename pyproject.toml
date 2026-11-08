@@ -1,0 +1,19 @@
+# Настройки инструментов Python (руководство по стилю, раздел 1).
+# Установка: pip install ruff
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+extend-exclude = ["auction/migrations"]
+
+[tool.ruff.lint]
+# E/W — PEP 8, F — pyflakes (неиспользуемые импорты), I — порядок импортов,
+# N — именование, B — типичные ошибки, UP — современный синтаксис Python 3.12.
+select = ["E", "W", "F", "I", "N", "B", "UP"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["auction", "config"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"

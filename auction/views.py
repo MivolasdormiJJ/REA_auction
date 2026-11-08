@@ -1,24 +1,20 @@
 import hashlib
 import json
+
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.tokens import default_token_generator
-from django.core.mail import send_mail
-from django.conf import settings
-from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
-from django.utils.encoding import force_bytes
-from django.db import IntegrityError
-from urllib.parse import urlencode
-from django.shortcuts import get_object_or_404
-from django.db import transaction
+from django.db import IntegrityError, transaction
 from django.db.models import Q
 from django.middleware.csrf import get_token
-from django.utils.decorators import method_decorator
+from django.shortcuts import get_object_or_404
+from django.utils.http import urlsafe_base64_decode
 from django.views.decorators.csrf import csrf_protect
-from rest_framework import viewsets, permissions, status
+from rest_framework import permissions, viewsets
 from rest_framework.decorators import action, api_view, permission_classes, throttle_classes
 from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.response import Response
 from rest_framework.throttling import SimpleRateThrottle
+
 from .models import Auction, AuctionRequest, Category, User
 from .serializers import (
     AuctionSerializer,
@@ -28,36 +24,34 @@ from .serializers import (
     DecisionInput,
     RegistrationInput,
 )
-from .services import eligible, transition, place_bid, Conflict, event
+from .services import Conflict, eligible, event, place_bid, transition
 
 
-class LoginRateThrottle(SimpleRateThrottle):
+class IpRateThrottle(SimpleRateThrottle):
+    """Ограничение частоты запросов по IP-адресу клиента."""
+
+    def get_cache_key(self, request, view):
+        # В production для общего лимита между воркерами нужен общий Redis-кеш.
+        return self.cache_format % {"scope": self.scope, "ident": self.get_ident(request)}
+
+
+class LoginRateThrottle(IpRateThrottle):
+    # ПРОБЛЕМА: без ограничения попыток можно массово подбирать пароль.
+    # РЕШЕНИЕ: лимит попыток входа по IP.
     scope = "login"
     rate = "10/min"
 
-    def get_cache_key(self, request, view):
-        # ПРОБЛЕМА: без ограничения попыток можно массово подбирать пароль.
-        # РЕШЕНИЕ: лимит попыток входа по IP. В production нужен общий Redis-кеш.
-        return self.cache_format % {"scope": self.scope, "ident": self.get_ident(request)}
 
-
-
-class RegisterRateThrottle(SimpleRateThrottle):
+class RegisterRateThrottle(IpRateThrottle):
+    # ПРОБЛЕМА: массовая регистрация создаёт нагрузку.
+    # РЕШЕНИЕ: ограничиваем запросы по IP.
     scope = "register"
     rate = "3/hour"
 
-    def get_cache_key(self, request, view):
-        # ПРОБЛЕМА: массовая регистрация и отправка писем создают нагрузку.
-        # РЕШЕНИЕ: ограничиваем запросы по IP (в production нужен общий кеш).
-        return self.cache_format % {"scope": self.scope, "ident": self.get_ident(request)}
 
-
-class VerifyRateThrottle(SimpleRateThrottle):
+class VerifyRateThrottle(IpRateThrottle):
     scope = "verify"
     rate = "20/hour"
-
-    def get_cache_key(self, request, view):
-        return self.cache_format % {"scope": self.scope, "ident": self.get_ident(request)}
 
 
 @api_view(["POST"])
@@ -75,9 +69,12 @@ def register(request):
     try:
         with transaction.atomic():
             user.save()
-    except IntegrityError:
-        raise ValidationError({"detail": "Имя пользователя или email уже используются"})
+    except IntegrityError as err:
+        raise ValidationError(
+            {"detail": "Имя пользователя или email уже используются"}
+        ) from err
     return Response({"detail": "Аккаунт создан. Теперь можно войти."}, status=201)
+
 
 @api_view(["POST"])
 @permission_classes([permissions.AllowAny])
@@ -85,13 +82,18 @@ def register(request):
 @csrf_protect
 def verify_email(request):
     uid, token = request.data.get("uid"), request.data.get("token")
-    if not isinstance(uid, str) or not isinstance(token, str) or len(uid) > 128 or len(token) > 128:
+    if (
+        not isinstance(uid, str)
+        or not isinstance(token, str)
+        or len(uid) > 128
+        or len(token) > 128
+    ):
         raise ValidationError({"detail": "Недействительная ссылка подтверждения"})
     try:
         user_id = urlsafe_base64_decode(uid).decode("utf-8")
         user = User.objects.get(pk=user_id)
-    except (ValueError, TypeError, UnicodeError, OverflowError, User.DoesNotExist):
-        raise ValidationError({"detail": "Недействительная ссылка подтверждения"})
+    except (ValueError, TypeError, UnicodeError, OverflowError, User.DoesNotExist) as err:
+        raise ValidationError({"detail": "Недействительная ссылка подтверждения"}) from err
     if user.email_verified:
         return Response({"detail": "Email уже подтверждён"})
     if not default_token_generator.check_token(user, token):
@@ -99,6 +101,16 @@ def verify_email(request):
     user.email_verified = True
     user.save(update_fields=["email_verified"])
     return Response({"detail": "Email подтверждён. Теперь можно войти."})
+
+
+def _user_payload(user):
+    """Данные текущего пользователя для ответов signin и me."""
+    return {
+        "id": user.pk,
+        "username": user.username,
+        "can_moderate": user.has_perm("auction.moderate_auction"),
+        "is_admin": user.is_superuser,
+    }
 
 
 class Admitted(permissions.BasePermission):
@@ -129,9 +141,7 @@ def signin(request):
         raise PermissionDenied("Неверные данные или нет доступа")
     eligible(user)
     login(request, user)
-    return Response(
-        {"id": user.pk, "username": user.username, "can_moderate": user.has_perm("auction.moderate_auction"), "is_admin": user.is_superuser, "csrfToken": get_token(request)}
-    )
+    return Response({**_user_payload(user), "csrfToken": get_token(request)})
 
 
 @api_view(["POST"])
@@ -143,14 +153,7 @@ def signout(request):
 @api_view(["GET"])
 def me(request):
     eligible(request.user)
-    return Response(
-        {
-            "id": request.user.pk,
-            "username": request.user.username,
-            "can_moderate": request.user.has_perm("auction.moderate_auction"),
-            "is_admin": request.user.is_superuser,
-        }
-    )
+    return Response(_user_payload(request.user))
 
 
 class CategoryViewSet(viewsets.ReadOnlyModelViewSet):
@@ -169,7 +172,8 @@ class AuctionViewSet(viewsets.ModelViewSet):
         visible = Q(owner=u) | Q(status__in=["open", "closed"])
         if u.has_perm("auction.moderate_auction"):
             visible |= Q(status="review")
-        qs = (Auction.objects.all() if u.is_superuser else Auction.objects.filter(visible)).order_by("-id")
+        qs = Auction.objects.all() if u.is_superuser else Auction.objects.filter(visible)
+        qs = qs.order_by("-id")
         if self.action == "list":
             for param in ["status", "category"]:
                 value = self.request.query_params.get(param)
@@ -260,9 +264,8 @@ class AuctionViewSet(viewsets.ModelViewSet):
         a = self.get_object()
         if request.method == "GET":
             # В открытых торгах отображаем предложения всем участникам аукциона.
-            return Response(
-                BidSerializer(a.bids.select_related("bidder").order_by("amount_kopecks", "created_at", "id"), many=True).data
-            )
+            bids = a.bids.select_related("bidder").order_by("amount_kopecks", "created_at", "id")
+            return Response(BidSerializer(bids, many=True).data)
         s = BidInput(data=request.data)
         s.is_valid(raise_exception=True)
         key = request.headers.get("Idempotency-Key", "")
