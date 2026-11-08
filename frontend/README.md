@@ -1,6 +1,6 @@
 # REA Auction — клиентское приложение
 
-Ветка разработки: `dev_any`. Интерфейс на **React 19, TypeScript, Vite, Ant Design**.
+Ветка публикации: `main`. Интерфейс на **React 19, TypeScript, Vite, Ant Design**.
 
 ## Основные команды
 
@@ -37,4 +37,4 @@ npm run lint
 - Реальное приложение: https://rea-auction.onrender.com
 - Учебный статический макет: https://mivolasdormijj.github.io/REA_auction/
 
-GitHub Pages обслуживает **только статическую сборку** и не поддерживает серверные Django-сессии и ставки. Деплой Render берёт код из `dev_any`. Ветку `main` не изменяем.
+GitHub Pages обслуживает **только статическую сборку** и не поддерживает серверные Django-сессии и ставки. Деплой Render берёт код из `main`; CI выполняется при каждом push.
