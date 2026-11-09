@@ -2,7 +2,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 
-from auction.models import Auction, AuctionRequest, Bid, Category, Event, Review, User, WorkOrder, WorkSubmission
+from auction.models import Auction, AuctionRequest, Bid, Category, ChatMessage, Event, Review, User, WorkOrder, WorkSubmission
 
 
 @admin.register(User)
@@ -41,6 +41,20 @@ class ReviewAdmin(admin.ModelAdmin):
     list_filter = ("rating",)
     search_fields = ("auction__title", "performer__username", "reviewer__username", "comment")
     readonly_fields = ("auction", "performer", "reviewer", "rating", "comment", "created_at")
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+
+@admin.register(ChatMessage)
+class ChatMessageAdmin(admin.ModelAdmin):
+    list_display = ("auction", "sender", "created_at")
+    search_fields = ("auction__title", "sender__username", "body")
+    list_select_related = ("auction", "sender")
+    readonly_fields = ("auction", "sender", "body", "idempotency_key", "created_at")
 
     def has_add_permission(self, request):
         return False

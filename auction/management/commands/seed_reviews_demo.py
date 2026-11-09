@@ -7,7 +7,7 @@ from django.db import transaction
 from django.utils import timezone
 
 from auction.models import (
-    Auction, Bid, Category, Review, TaskCompletion, User, WorkOrder, WorkSubmission,
+    Auction, Bid, Category, ChatMessage, Review, TaskCompletion, User, WorkOrder, WorkSubmission,
 )
 
 
@@ -124,8 +124,20 @@ class Command(BaseCommand):
         )
 
         pending.refresh_from_db()
+        demo_messages = [
+            (users["review_owner"], "Здравствуйте! Уточните, пожалуйста, когда сможете передать финальные исходники?"),
+            (users["review_performer"], "Здравствуйте! Финальную версию и инструкцию подготовлю сегодня до 18:00."),
+            (users["review_owner"], "Отлично, спасибо. Добавьте, пожалуйста, также мобильный вариант страницы."),
+        ]
+        for index, (sender, body) in enumerate(demo_messages, start=1):
+            ChatMessage.objects.get_or_create(
+                auction=pending,
+                sender=sender,
+                idempotency_key=f"chat-demo-{index}",
+                defaults={"body": body},
+            )
         self.stdout.write(self.style.SUCCESS(
-            "Review demo ready. Password for all accounts: " + PASSWORD
+            "Review and chat demo ready. Password for all accounts: " + PASSWORD
         ))
         self.stdout.write(
             f"Customer: review_owner; performer: review_performer; reviewable auction id: {pending.pk}"

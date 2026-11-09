@@ -10,6 +10,7 @@ from auction.notifications import my_notifications
 from auction.my_works import my_works
 from auction.work_api import work_detail, work_start, work_submit, work_request_revision, work_accept
 from auction.reviews_api import create_review, performer_reputation
+from auction.chat_api import auction_chat
 from auction.analytics import my_statistics, confirm_task_completion, completion_status, admin_analytics, admin_export_csv
 
 from auction.views import (
@@ -45,6 +46,7 @@ urlpatterns = [
     path("api/auctions/<int:auction_id>/work/accept/", work_accept),
     path("api/auctions/<int:auction_id>/review/", create_review),
     path("api/performers/<int:user_id>/reputation/", performer_reputation),
+    path("api/auctions/<int:auction_id>/chat/", auction_chat),
     path("api/my/statistics/", my_statistics),
     path("api/auctions/<int:auction_id>/complete-work/", confirm_task_completion),
     path("api/auctions/<int:auction_id>/completion/", completion_status),

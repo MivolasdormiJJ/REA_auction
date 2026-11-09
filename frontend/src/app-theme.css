@@ -54,6 +54,7 @@ body{margin:0}#root{min-height:100vh}
 .rea-profile-hero .ant-avatar{background:#ffffff28;color:white;font-weight:850}
 .rea-profile-hero h2{color:white;font-size:25px;margin:0 0 5px}.rea-profile-hero p{color:#e0e4ff;font-size:12px;margin:0}
 .rea-review-item{padding:18px 0;border-bottom:1px solid #edf1f7}.rea-review-item:first-child{padding-top:0}.rea-review-item:last-child{border-bottom:0;padding-bottom:0}
+.rea-chat-messages{height:360px;overflow:auto;background:#f7f9fd;border:1px solid #e8edf6;border-radius:13px;padding:16px;display:flex;flex-direction:column;gap:13px}.rea-chat-row{display:flex;align-items:flex-end;gap:9px;max-width:82%}.rea-chat-row.mine{align-self:flex-end;justify-content:flex-end}.rea-chat-bubble{background:#fff;border:1px solid #e4eaf4;border-radius:13px 13px 13px 3px;padding:10px 13px;box-shadow:0 3px 12px #23365d08;min-width:120px}.rea-chat-row.mine .rea-chat-bubble{background:#fff0e3;border-color:#ffd9bb;border-radius:13px 13px 3px 13px}.rea-chat-meta{font-size:10px;color:#8b98af;margin-bottom:5px}.rea-chat-body{font-size:13px;line-height:1.55;white-space:pre-wrap;overflow-wrap:anywhere}
 .rea-login-shell{min-height:100vh;display:grid;grid-template-columns:1fr 1fr;background:#f4f8fc}
 .rea-login-aside{padding:clamp(32px,5vw,78px);color:#fff;background:linear-gradient(145deg,#153e63,#246c9b 59%,#ed7a27);display:flex;flex-direction:column;justify-content:space-between;gap:35px;overflow:hidden}
 .rea-login-aside h1{font-size:clamp(35px,4.5vw,64px);letter-spacing:-1.9px;line-height:1.1;margin:0}

@@ -8,7 +8,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from auction.models import Bid, Auction, WorkOrder, WorkSubmission
+from auction.models import Bid, Auction, ChatMessage, WorkOrder, WorkSubmission
 
 
 @api_view(["GET"])
@@ -79,5 +79,21 @@ def my_notifications(request):
                     "your_bid_kopecks": None, "payment_kopecks": None,
                     "created_at": submission.reviewed_at.isoformat(),
                 })
+    # A recipient sees incoming chat messages as durable notifications.
+    incoming_messages = (ChatMessage.objects.filter(
+        Q(auction__owner=request.user) | Q(auction__winner=request.user)
+    ).exclude(sender=request.user).select_related("auction", "sender").order_by("-created_at")[:50])
+    for chat_message in incoming_messages:
+        items.append({
+            "id": f"chat-message-{chat_message.id}",
+            "auction_id": chat_message.auction_id,
+            "auction_title": chat_message.auction.title,
+            "type": "chat_message",
+            "title": f"Новое сообщение от {chat_message.sender.username}",
+            "message": chat_message.body[:160],
+            "your_bid_kopecks": None,
+            "payment_kopecks": None,
+            "created_at": chat_message.created_at.isoformat(),
+        })
     items.sort(key=lambda item: item["created_at"] or "", reverse=True)
     return Response({"count": len(items), "results": items})

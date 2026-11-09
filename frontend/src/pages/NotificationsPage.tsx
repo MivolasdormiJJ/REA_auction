@@ -1,12 +1,12 @@
 import { Alert, Button, Card, Empty, List, Segmented, Spin, Tag, Typography } from 'antd';
-import { BellOutlined, CheckCircleOutlined, CloseCircleOutlined, ClockCircleOutlined } from '@ant-design/icons';
+import { BellOutlined, CheckCircleOutlined, CloseCircleOutlined, ClockCircleOutlined, MessageOutlined } from '@ant-design/icons';
 import { Link } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import client from '../api/client';
 
 type Notice = {
   id: string; auction_id: number; auction_title: string;
-  type: 'auction_won' | 'auction_lost' | 'auction_owner_closed';
+  type: 'auction_won' | 'auction_lost' | 'auction_owner_closed' | 'work_submitted' | 'work_accepted' | 'work_revision' | 'chat_message';
   title: string; message: string;
   your_bid_kopecks: number | null; payment_kopecks: number | null;
   created_at: string | null;
@@ -61,12 +61,14 @@ export function NotificationsPage() {
             renderItem={item => (
               <List.Item actions={[<Link key="auction" to={`/auctions/${item.auction_id}`}>Открыть аукцион</Link>]}>
                 <List.Item.Meta
-                  avatar={item.type === 'auction_won'
+                  avatar={item.type === 'chat_message'
+                    ? <MessageOutlined style={{ color: '#d96f1e', fontSize: 26 }} />
+                    : item.type === 'auction_won'
                     ? <CheckCircleOutlined style={{ color: '#dd761b', fontSize: 26 }} />
                     : item.type === 'auction_lost'
                     ? <CloseCircleOutlined style={{ color: '#537eaf', fontSize: 26 }} />
                     : <ClockCircleOutlined style={{ color: '#287b8c', fontSize: 26 }} />}
-                  title={<span>{item.title} <Tag color={item.type === 'auction_won' ? 'orange' : 'blue'}>{item.type === 'auction_won' ? 'Победа' : item.type === 'auction_lost' ? 'Участие' : 'Заказчик'}</Tag></span>}
+                  title={<span>{item.title} <Tag color={item.type === 'auction_won' ? 'orange' : item.type === 'chat_message' ? 'gold' : 'blue'}>{item.type === 'auction_won' ? 'Победа' : item.type === 'auction_lost' ? 'Участие' : item.type === 'chat_message' ? 'Чат' : 'Заказ'}</Tag></span>}
                   description={<div>
                     <Typography.Text strong>{item.auction_title}</Typography.Text>
                     <p style={{ margin: '6px 0' }}>{item.message}</p>

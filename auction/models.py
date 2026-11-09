@@ -165,3 +165,27 @@ class Review(models.Model):
                 name="reviewer_is_not_performer",
             ),
         ]
+
+
+class ChatMessage(models.Model):
+    """Immutable private message between the customer and auction winner."""
+
+    auction = models.ForeignKey(
+        Auction, on_delete=models.PROTECT, related_name="chat_messages",
+    )
+    sender = models.ForeignKey(
+        User, on_delete=models.PROTECT, related_name="chat_messages_sent",
+    )
+    body = models.TextField()
+    idempotency_key = models.CharField(max_length=80)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["id"]
+        indexes = [models.Index(fields=["auction", "id"], name="chat_auction_id_idx")]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["auction", "sender", "idempotency_key"],
+                name="chat_unique_sender_request",
+            ),
+        ]

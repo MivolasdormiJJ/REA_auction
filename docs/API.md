@@ -30,6 +30,8 @@ API обслуживается Django REST Framework по пути `/api/`. Фо
 | `POST auctions/{id}/reject/` | Модератор отклоняет задачу |
 | `POST /api/auctions/{id}/review/` | Заказчик публикует оценку 1–5 и комментарий после приёмки работы |
 | `GET /api/performers/{user_id}/reputation/` | Профиль исполнителя, агрегированный рейтинг и последние отзывы |
+| `GET /api/auctions/{id}/chat/?after={message_id}` | Приватная история и новые сообщения заказчика и победителя |
+| `POST /api/auctions/{id}/chat/` | Отправка неизменяемого сообщения с обязательным `Idempotency-Key` |
 | `GET auctions/{id}/bids/` | Список **всех открытых ставок** в доступном аукционе |
 | `POST auctions/{id}/bids/` | Подать одну неизменяемую ставку |
 

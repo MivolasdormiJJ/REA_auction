@@ -27,6 +27,7 @@ import { StatusBadge } from '../components/StatusBadge';
 import { KopecksInput } from '../components/KopecksInput';
 import { useAuth } from '../context/AuthContext';
 import { WorkPanel } from '../components/WorkPanel';
+import { ChatPanel } from '../components/ChatPanel';
 
 function kopecksToRubles(k: number | null) {
   if (k == null) return '—';
@@ -243,7 +244,10 @@ export function AuctionDetailPage() {
           </Card>
           {auction.status === 'closed' && auction.winner_id !== null &&
             (user?.id === auction.owner_id || user?.id === auction.winner_id) &&
-            <WorkPanel auction={auction} userId={user?.id} />}
+            <>
+              <WorkPanel auction={auction} userId={user?.id} />
+              {user?.id && <ChatPanel auctionId={auction.id} userId={user.id} />}
+            </>}
         </Col>
 
         <Col xs={24} lg={8}>
