@@ -135,3 +135,33 @@ class WorkSubmission(models.Model):
             models.UniqueConstraint(fields=["order", "revision_number"], name="work_unique_revision"),
             models.UniqueConstraint(fields=["order", "idempotency_key"], name="work_unique_submission_key"),
         ]
+
+
+class Review(models.Model):
+    """Customer feedback for one accepted order and its winning performer."""
+
+    auction = models.OneToOneField(
+        Auction, on_delete=models.PROTECT, related_name="review",
+    )
+    reviewer = models.ForeignKey(
+        User, on_delete=models.PROTECT, related_name="reviews_written",
+    )
+    performer = models.ForeignKey(
+        User, on_delete=models.PROTECT, related_name="reviews_received",
+    )
+    rating = models.PositiveSmallIntegerField()
+    comment = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at", "-pk"]
+        constraints = [
+            models.CheckConstraint(
+                condition=Q(rating__gte=1, rating__lte=5),
+                name="review_rating_between_1_and_5",
+            ),
+            models.CheckConstraint(
+                condition=~Q(reviewer=models.F("performer")),
+                name="reviewer_is_not_performer",
+            ),
+        ]

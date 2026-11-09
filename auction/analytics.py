@@ -8,7 +8,7 @@ from datetime import datetime
 from io import StringIO
 
 from django.db import IntegrityError, transaction
-from django.db.models import Count, Sum, Q, F
+from django.db.models import Avg, Count, Sum, Q, F
 from django.db.models.functions import TruncMonth
 from django.http import HttpResponse
 from django.utils import timezone
@@ -33,6 +33,7 @@ def my_statistics(request):
         raise PermissionDenied("Аккаунт заблокирован")
     bids = Bid.objects.filter(bidder=user)
     wins = Auction.objects.filter(status=Auction.Status.CLOSED, winner=user)
+    reputation = user.reviews_received.aggregate(average=Avg("rating"), count=Count("id"))
     return Response({
         "bids_count": bids.count(),
         "wins_count": wins.count(),
@@ -44,6 +45,8 @@ def my_statistics(request):
         "auctions_created_count": Auction.objects.filter(owner=user).count(),
         "auctions_closed_count": Auction.objects.filter(owner=user, status=Auction.Status.CLOSED).count(),
         "win_rate_percent": round(wins.count() * 100 / bids.count(), 1) if bids.exists() else 0,
+        "average_rating": round(float(reputation["average"]), 1) if reputation["average"] is not None else None,
+        "reviews_count": reputation["count"],
     })
 
 

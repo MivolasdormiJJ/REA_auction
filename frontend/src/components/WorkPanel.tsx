@@ -1,5 +1,6 @@
-import { Alert, Button, Card, Divider, Input, Space, Spin, Tag, Timeline, Typography, message } from 'antd';
+import { Alert, Button, Card, Divider, Input, Rate, Space, Spin, Tag, Timeline, Typography, message } from 'antd';
 import { useEffect, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
 import client from '../api/client';
 import type { Auction } from '../api/types';
 
@@ -12,6 +13,7 @@ type Work = {
   status: 'not_started' | 'in_progress' | 'submitted' | 'revision_requested' | 'accepted';
   started_at: string | null; accepted_at: string | null; due_at: string;
   is_overdue: boolean; submissions: Submission[];
+  review: null | { id: number; rating: number; comment: string; reviewer_username: string; created_at: string };
 };
 const labels: Record<Work['status'], string> = {
   not_started: 'Ожидает начала работы', in_progress: 'Исполнитель работает',
@@ -24,6 +26,8 @@ export function WorkPanel({ auction, userId }: { auction: Auction; userId: numbe
   const [pending, setPending] = useState(false);
   const [result, setResult] = useState('');
   const [feedback, setFeedback] = useState('');
+  const [rating, setRating] = useState(5);
+  const [reviewComment, setReviewComment] = useState('');
   const [error, setError] = useState('');
   const pendingSubmission = useRef<{ text: string; key: string } | null>(null);
   const winner = userId === auction.winner_id;
@@ -85,6 +89,26 @@ export function WorkPanel({ auction, userId }: { auction: Auction; userId: numbe
     }
   }
 
+  async function submitReview() {
+    if (pending || reviewComment.trim().length < 20 || reviewComment.trim().length > 2000) return;
+    setPending(true);
+    setError('');
+    try {
+      const { data } = await client.post<NonNullable<Work['review']>>(
+        `/auctions/${auction.id}/review/`,
+        { rating, comment: reviewComment.trim() },
+      );
+      setWork(current => current ? { ...current, review: data } : current);
+      setReviewComment('');
+      message.success('Отзыв опубликован, рейтинг исполнителя обновлён');
+    } catch (err: unknown) {
+      const data = (err as { response?: { data?: { detail?: string; comment?: string[]; rating?: string[] } } })?.response?.data;
+      setError(data?.detail ?? data?.comment?.[0] ?? data?.rating?.[0] ?? 'Не удалось опубликовать отзыв');
+    } finally {
+      setPending(false);
+    }
+  }
+
   if (!owner && !winner) return null;
   return <Card title="Выполнение заказа и приёмка работы" style={{ marginTop: 20 }}>
     {loading ? <Spin /> : <>
@@ -130,6 +154,31 @@ export function WorkPanel({ auction, userId }: { auction: Auction; userId: numbe
         {work.status === 'submitted' && winner && <Alert type="info" showIcon message="Результат отправлен. Ожидаем решения заказчика." />}
         {work.status === 'revision_requested' && owner && <Alert type="warning" showIcon message="Запрос на доработку отправлен исполнителю." />}
         {work.status === 'accepted' && <Alert type="success" showIcon message="Работа принята заказчиком" description={work.accepted_at ? `Дата приёмки: ${new Date(work.accepted_at).toLocaleString('ru-RU')}` : undefined} />}
+        {work.status === 'accepted' && owner && !work.review && <>
+          <Divider>Оцените исполнителя</Divider>
+          <Typography.Paragraph type="secondary">
+            Отзыв будет опубликован в профиле исполнителя. После публикации изменить его нельзя.
+          </Typography.Paragraph>
+          <Rate value={rating} onChange={setRating} style={{ marginBottom: 14 }} />
+          <Input.TextArea value={reviewComment} onChange={event => setReviewComment(event.target.value)}
+            placeholder="Расскажите о качестве результата, соблюдении сроков и коммуникации (от 20 символов)"
+            maxLength={2000} showCount autoSize={{ minRows: 3, maxRows: 6 }} />
+          <Button style={{ marginTop: 12 }} type="primary" loading={pending}
+            disabled={reviewComment.trim().length < 20} onClick={() => void submitReview()}>
+            Опубликовать отзыв
+          </Button>
+        </>}
+        {work.review && <>
+          <Divider>Отзыв заказчика</Divider>
+          <Card size="small" style={{ background: '#fffaf5' }}>
+            <Space wrap><Rate disabled value={work.review.rating} /><Typography.Text strong>{work.review.rating.toFixed(1)}</Typography.Text></Space>
+            <Typography.Paragraph style={{ whiteSpace: 'pre-wrap', margin: '12px 0 8px' }}>{work.review.comment}</Typography.Paragraph>
+            <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+              {work.review.reviewer_username} · {new Date(work.review.created_at).toLocaleDateString('ru-RU')}
+            </Typography.Text>
+            {auction.winner_id && <div style={{ marginTop: 10 }}><Link to={`/performers/${auction.winner_id}`}>Открыть рейтинг исполнителя →</Link></div>}
+          </Card>
+        </>}
         {work.submissions.length > 0 && <>
           <Divider>История версий и решений</Divider>
           <Timeline items={work.submissions.map(item => ({

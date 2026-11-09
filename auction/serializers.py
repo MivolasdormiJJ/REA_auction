@@ -1,4 +1,5 @@
 from django.utils import timezone
+from django.db.models import Avg, Count
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.contrib.auth.validators import UnicodeUsernameValidator
@@ -11,6 +12,9 @@ class AuctionSerializer(serializers.ModelSerializer):
     owner_id = serializers.IntegerField(read_only=True)
     winner_id = serializers.SerializerMethodField()
     payment_kopecks = serializers.SerializerMethodField()
+    winner_username = serializers.SerializerMethodField()
+    winner_rating = serializers.SerializerMethodField()
+    winner_reviews_count = serializers.SerializerMethodField()
 
     class Meta:
         model = Auction
@@ -26,6 +30,9 @@ class AuctionSerializer(serializers.ModelSerializer):
             "status",
             "moderation_reason",
             "winner_id",
+            "winner_username",
+            "winner_rating",
+            "winner_reviews_count",
             "payment_kopecks",
             "closed_at",
         ]
@@ -41,6 +48,25 @@ class AuctionSerializer(serializers.ModelSerializer):
 
     def get_payment_kopecks(self, obj):
         return obj.payment_kopecks if obj.status == "closed" else None
+
+    def get_winner_username(self, obj):
+        return obj.winner.username if obj.status == "closed" and obj.winner_id else None
+
+    def _winner_reputation(self, obj):
+        if obj.status != "closed" or not obj.winner_id:
+            return {"average": None, "count": 0}
+        cached = getattr(obj, "_winner_reputation_cache", None)
+        if cached is None:
+            cached = obj.winner.reviews_received.aggregate(average=Avg("rating"), count=Count("id"))
+            obj._winner_reputation_cache = cached
+        return cached
+
+    def get_winner_rating(self, obj):
+        average = self._winner_reputation(obj)["average"]
+        return round(float(average), 1) if average is not None else None
+
+    def get_winner_reviews_count(self, obj):
+        return self._winner_reputation(obj)["count"]
 
     def validate(self, attrs):
         end = attrs.get("ends_at", getattr(self.instance, "ends_at", None))
@@ -59,10 +85,26 @@ class BidInput(serializers.Serializer):
 class BidSerializer(serializers.ModelSerializer):
     bidder_id = serializers.IntegerField(read_only=True)
     bidder_username = serializers.CharField(source="bidder.username", read_only=True)
+    bidder_rating = serializers.SerializerMethodField()
+    bidder_reviews_count = serializers.SerializerMethodField()
 
     class Meta:
         model = Bid
-        fields = ["id", "auction_id", "bidder_id", "bidder_username", "amount_kopecks", "created_at"]
+        fields = ["id", "auction_id", "bidder_id", "bidder_username", "bidder_rating", "bidder_reviews_count", "amount_kopecks", "created_at"]
+
+    def _reputation(self, obj):
+        cached = getattr(obj.bidder, "_reputation_cache", None)
+        if cached is None:
+            cached = obj.bidder.reviews_received.aggregate(average=Avg("rating"), count=Count("id"))
+            obj.bidder._reputation_cache = cached
+        return cached
+
+    def get_bidder_rating(self, obj):
+        average = self._reputation(obj)["average"]
+        return round(float(average), 1) if average is not None else None
+
+    def get_bidder_reviews_count(self, obj):
+        return self._reputation(obj)["count"]
 
 
 class AdminUserSerializer(serializers.ModelSerializer):

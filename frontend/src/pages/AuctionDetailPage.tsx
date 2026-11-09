@@ -13,7 +13,7 @@ import {
   message,
 } from 'antd';
 import { useEffect, useRef, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import {
   approveAuction,
   getAuction,
@@ -215,7 +215,11 @@ export function AuctionDetailPage() {
               )}
               {auction.winner_id != null && (
                 <Descriptions.Item label="Победитель">
-                  ID {auction.winner_id} — {kopecksToRubles(auction.payment_kopecks)}
+                  <Link to={`/performers/${auction.winner_id}`} style={{ fontWeight: 700 }}>
+                    {auction.winner_username ?? `Исполнитель #${auction.winner_id}`}
+                  </Link>
+                  {' · '}{auction.winner_rating != null ? `★ ${auction.winner_rating} (${auction.winner_reviews_count})` : 'пока без отзывов'}
+                  {' · '}{kopecksToRubles(auction.payment_kopecks)}
                 </Descriptions.Item>
               )}
               {auction.closed_at && (
@@ -246,7 +250,9 @@ export function AuctionDetailPage() {
           <Card title={`Все ставки (${allBids.length})`} style={{ marginBottom: 16 }}>
             {allBids.length === 0 ? <Typography.Text type="secondary">Предложений пока нет.</Typography.Text> : allBids.map((bid, index) => (
               <div key={bid.id} style={{ display: 'flex', justifyContent: 'space-between', gap: 12, padding: '12px 0', borderBottom: '1px solid #eef1f8' }}>
-                <span>{index + 1}. {bid.bidder_username || `Участник #${bid.bidder_id}`}{bid.bidder_id === user?.id ? ' (вы)' : ''}</span>
+                <span>{index + 1}. {bid.bidder_id ? <Link to={`/performers/${bid.bidder_id}`}>{bid.bidder_username || `Участник #${bid.bidder_id}`}</Link> : bid.bidder_username}{bid.bidder_id === user?.id ? ' (вы)' : ''}
+                  <small style={{ display: 'block', color: '#8996ae', marginTop: 3 }}>{bid.bidder_rating != null ? `★ ${bid.bidder_rating} · ${bid.bidder_reviews_count} отзывов` : 'Пока без отзывов'}</small>
+                </span>
                 <Typography.Text strong>{kopecksToRubles(bid.amount_kopecks)}</Typography.Text>
               </div>
             ))}

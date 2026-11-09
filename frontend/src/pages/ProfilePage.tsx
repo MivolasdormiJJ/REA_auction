@@ -14,6 +14,8 @@ type UserStatistics = {
   auctions_created_count: number;
   auctions_closed_count: number;
   win_rate_percent: number;
+  average_rating: number | null;
+  reviews_count: number;
 };
 
 export function ProfilePage() {
@@ -49,6 +51,8 @@ export function ProfilePage() {
             <Col xs={12} md={6}><Statistic title="Побед в торгах" value={stats.wins_count} /></Col>
             <Col xs={12} md={6}><Statistic title="Выполнено заданий" value={stats.completed_tasks_count} /></Col>
             <Col xs={12} md={6}><Statistic title="Процент побед" value={stats.win_rate_percent} suffix="%" precision={1} /></Col>
+            <Col xs={12} md={6}><Statistic title="Рейтинг исполнителя" value={stats.average_rating ?? 0} suffix="/ 5" precision={1} /></Col>
+            <Col xs={12} md={6}><Statistic title="Получено отзывов" value={stats.reviews_count} /></Col>
           </Row>
           <Typography.Paragraph type="secondary" style={{ fontSize: 12, marginTop: 16, marginBottom: 0 }}>
             Создано заказов: {stats.auctions_created_count} · Завершено торгов по вашим заказам: {stats.auctions_closed_count} · Активных ставок: {stats.active_bids_count}.
@@ -76,6 +80,7 @@ export function ProfilePage() {
           <Card title="Быстрые действия">
             <Space direction="vertical" style={{ width: '100%' }} size="middle">
               <Link to="/cabinet"><Button block size="large">Посмотреть мои заказы</Button></Link>
+              <Link to={`/performers/${user.id}`}><Button block size="large">Мой рейтинг исполнителя</Button></Link>
               <Link to="/auctions/new"><Button block type="primary" size="large" icon={<PlusOutlined />}>Создать задачу</Button></Link>
               <Link to="/design-preview"><Button block size="large" icon={<BookOutlined />}>Как работают торги</Button></Link>
               {user.can_moderate && <Link to="/moderation"><Button block size="large" icon={<SafetyCertificateOutlined />}>Открыть модерацию</Button></Link>}

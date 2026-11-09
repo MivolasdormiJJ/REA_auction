@@ -11,7 +11,7 @@ from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from auction.models import Auction, TaskCompletion, WorkOrder, WorkSubmission
+from auction.models import Auction, Review, TaskCompletion, WorkOrder, WorkSubmission
 from auction.services import Conflict, event
 
 
@@ -44,6 +44,8 @@ def serialize(auction, order=None):
         }
         for s in order.submissions.all()
     ]
+    review = (Review.objects.filter(auction_id=auction.pk)
+              .select_related("auction", "reviewer").first())
     return {
         "auction_id": auction.pk,
         "owner_id": auction.owner_id,
@@ -55,6 +57,13 @@ def serialize(auction, order=None):
         "due_at": auction.due_at.isoformat(),
         "is_overdue": timezone.now() > auction.due_at and not completion,
         "submissions": deliveries,
+        "review": None if review is None else {
+            "id": review.pk,
+            "rating": review.rating,
+            "comment": review.comment,
+            "reviewer_username": review.reviewer.username,
+            "created_at": review.created_at.isoformat(),
+        },
     }
 
 

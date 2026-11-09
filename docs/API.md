@@ -28,6 +28,8 @@ API обслуживается Django REST Framework по пути `/api/`. Фо
 | `POST auctions/{id}/submit/` | Отправить на модерацию |
 | `POST auctions/{id}/approve/` | Модератор одобряет задачу |
 | `POST auctions/{id}/reject/` | Модератор отклоняет задачу |
+| `POST /api/auctions/{id}/review/` | Заказчик публикует оценку 1–5 и комментарий после приёмки работы |
+| `GET /api/performers/{user_id}/reputation/` | Профиль исполнителя, агрегированный рейтинг и последние отзывы |
 | `GET auctions/{id}/bids/` | Список **всех открытых ставок** в доступном аукционе |
 | `POST auctions/{id}/bids/` | Подать одну неизменяемую ставку |
 
